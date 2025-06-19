@@ -31,11 +31,12 @@ function createSyntaxHidingDecorations(state: EditorState): DecorationSet {
           currentParent.type.name === 'ATXHeading4' ||
           currentParent.type.name === 'ATXHeading5' ||
           currentParent.type.name === 'ATXHeading6' ||
-          currentParent.type.name === 'StrongEmphasis' ||
-          currentParent.type.name === 'Emphasis' ||
-          currentParent.type.name === 'FencedCode' ||
-          // For ListItem, only reveal if its parent is an OrderedList
-          (currentParent.type.name === 'ListItem' && currentParent.parent?.type.name === 'OrderedList')
+          currentParent.type.name === 'StrongEmphasis' || // This parent will reveal **
+          currentParent.type.name === 'Emphasis' ||     // This parent will reveal *
+          currentParent.type.name === 'FencedCode'      // This parent will reveal ```
+          // ListItem (both ordered and unordered) will NOT trigger revealSyntax from here.
+          // Ordered list numbers should always be visible.
+          // Unordered list marks are handled by listBulletExtension's widget logic.
         ) {
           if (cursorFrom >= currentParent.from && cursorFrom <= currentParent.to) {
             revealSyntax = true;
@@ -59,23 +60,14 @@ function createSyntaxHidingDecorations(state: EditorState): DecorationSet {
           }
           break;
 
-        case 'EmphasisMark':
-        case 'BlockquoteMark':
-        case 'FencedCodeMark':
-        case 'ListMark': // Keep ListMark here. It will now *only* hide ordered list marks when inactive.
-                         // Unordered list marks are handled by listBulletExtension.
-          // Before hiding, check if its parent is an OrderedList.
-          // If it's a BulletList, listBulletExtension handles it.
-          if (nodeRef.node.parent?.type.name === 'OrderedList') {
-            for (let i = from; i < to; i++) {
-              decorations.push(zeroWidthReplaceDecoration.range(i, i + 1));
-            }
-            // Also hide the space after the ordered list mark, e.g., "1. "
-            if (to < state.doc.length && state.doc.sliceString(to, to + 1) === ' ') {
-                decorations.push(zeroWidthReplaceDecoration.range(to, to + 1));
-            }
+        case 'EmphasisMark':     // RE-ADDED: This handles hiding ** and * when inactive
+        case 'BlockquoteMark':   // RE-ADDED: This handles hiding > when inactive
+        case 'FencedCodeMark':   // RE-ADDED: This handles hiding ``` when inactive
+          for (let i = from; i < to; i++) {
+            decorations.push(zeroWidthReplaceDecoration.range(i, i + 1));
           }
           break;
+        // ListMark is intentionally NOT here, as per our revised strategy.
       }
     }
   });
