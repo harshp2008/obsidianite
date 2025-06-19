@@ -10,91 +10,89 @@ body {
 }
 
 .App {
-  max-width: 900px; /* Constrain width for better readability */
-  margin: 0 auto; /* Center the app container */
+  max-width: 900px;
+  margin: 0 auto;
   padding: 20px;
-  background-color: #282c34; /* Match body background */
-  border-radius: 8px; /* Slightly rounded corners */
+  background-color: #282c34;
+  border-radius: 8px;
 }
 
 /* --- Header Styling --- */
 .app-header {
-  display: flex; /* Use flexbox for horizontal layout */
-  align-items: center; /* Vertically align items */
-  justify-content: space-between; /* Space out title and button */
-  margin-bottom: 20px; /* Space below header */
-  padding-bottom: 10px; /* Internal padding */
-  border-bottom: 1px solid #3e4451; /* Subtle separator */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #3e4451;
 }
 
 .app-title {
-  font-size: 1.8em; /* Smaller title font size */
-  color: #61afef; /* A nice blue for the title */
-  margin: 0; /* Remove default margin */
+  font-size: 1.8em;
+  color: #61afef;
+  margin: 0;
 }
 
 .log-button {
-  background-color: #61afef; /* Button background color */
-  color: white; /* Button text color */
+  background-color: #61afef;
+  color: white;
   border: none;
   padding: 8px 15px;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 0.9em; /* Smaller button font size */
+  font-size: 0.9em;
   transition: background-color 0.2s ease;
 }
 
 .log-button:hover {
-  background-color: #52a0e0; /* Darker blue on hover */
+  background-color: #52a0e0;
 }
 
 /* --- Editor Container Styling --- */
 .editor-container {
-  border: 1px solid #3e4451; /* Subtle border for the editor */
+  border: 1px solid #3e4451;
   border-radius: 8px;
-  overflow: hidden; /* Important for border-radius to apply to editor contents */
-  min-height: 400px; /* Ensure a minimum height for the editor */
+  overflow: hidden;
+  min-height: 400px;
 }
 
 /* --- CodeMirror Core Overrides --- */
 .cm-editor {
-  height: 100%; /* Fill the editor-container */
-  font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace; /* Preferred monospace font */
-  font-size: 16px; /* Adjust base font size */
-  line-height: 1.5; /* Improve line spacing */
+  height: 100%;
+  font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 16px;
+  line-height: 1.5;
 }
 
 .cm-editor .cm-line {
-  padding-left: 8px; /* Add some padding to lines if no line numbers */
+  padding-left: 8px;
 }
 
-.cm-editor .cm-scroller { /* General styling for the scrollable area */
-  padding: 15px; /* Add some padding around the text */
+.cm-editor .cm-scroller {
+  padding: 15px;
 }
 
 .cm-editor .cm-activeLine {
-  background-color: #323842; /* A slightly lighter dark for active line */
+  background-color: #323842;
 }
 
 /* --- Syntax Highlighting (from customHighlightStyle) --- */
-/* These ensure proper colors for the *content* of markdown */
 .cm-editor .cm-header-1, .cm-editor .cm-header-2, .cm-editor .cm-header-3,
 .cm-editor .cm-header-4, .cm-editor .cm-header-5, .cm-editor .cm-header-6 {
-  color: #e06c75 !important; /* Headers - example red from oneDark theme */
+  color: #e06c75 !important;
 }
 
 .cm-editor .cm-strong {
   font-weight: bold;
-  color: #c678dd !important; /* Bold text - example purple */
+  color: #c678dd !important;
 }
 
 .cm-editor .cm-emphasis {
   font-style: italic;
-  color: #e5c07b !important; /* Italic text - example yellow */
+  color: #e5c07b !important;
 }
 
-/* --- Link Display (from markdownLinkTransformation) --- */
-/* This is for the custom widget that replaces the link syntax */
+/* --- Link Display (for markdownLinkTransformation, if used) --- */
 .cm-editor .cm-link-display {
   color: #98c379; /* A green color for links */
   text-decoration: underline;
@@ -107,38 +105,20 @@ body {
   color: #7fbf5d;
 }
 
-/* Hide the cursor in the replaced link view if it's showing for the widget */
+/* Hide the cursor when it's just visually over the replaced link widget */
 .cm-editor .cm-link-display + .cm-cursor {
     display: none;
 }
 
 /* --- List Bullets --- */
-/* CodeMirror's default bullet styling */
+/* This ensures CodeMirror's own visual bullet point is always visible */
 .cm-editor .cm-list-bullet {
   color: #abb2bf; /* Show subtle grey bullets by default */
   margin-right: 5px;
   pointer-events: auto; /* Allow cursor interaction with the bullet */
 }
 
-/*
-  The `cm-list-bullet` itself is distinct from the `ListMark` node
-  which is the `-` or `*` character. The `markdownSyntaxHiding`
-  extension will hide the `ListMark` character.
-  The `cm-list-bullet` is a separate visual element CodeMirror adds.
-*/
-
-/* --- Cleanup of Old Hiding Styles --- */
-/* Remove all previous iterations of hiding CSS classes */
-/* These are no longer needed as the hiding is done by Decoration.replace directly */
-/*
-.cm-hidden-markdown-syntax { display: none; }
-.cm-editor .cm-hidden-markdown-syntax-replaced { display: none !important; }
-.cm-editor .cm-hidden-markdown-syntax-mark {
-  color: transparent !important;
-  font-size: 0.1px !important;
-  letter-spacing: -100px !important;
-  white-space: pre !important;
-  overflow: hidden !important;
-  display: inline !important;
-}
+/* --- NO OTHER HIDING CSS --- */
+/* All other hiding CSS (cm-hidden-markdown-syntax-mark, etc.) is removed.
+   The hiding is now solely handled by the zero-width space replacement in TS.
 */

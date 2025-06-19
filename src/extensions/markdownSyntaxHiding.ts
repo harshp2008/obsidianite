@@ -2,6 +2,7 @@
 import { EditorView, Decoration, type DecorationSet } from '@codemirror/view';
 import { StateField, type Transaction, EditorState, Range } from '@codemirror/state';
 import { syntaxTree } from '@codemirror/language';
+import type { SyntaxNode } from '@lezer/common'; // Import SyntaxNode for type safety
 
 const zeroWidthReplaceDecoration = Decoration.replace({
   content: '​' // Zero-width space character (U+200B)
@@ -16,7 +17,6 @@ function createSyntaxHidingDecorations(state: EditorState): DecorationSet {
   const tree = syntaxTree(state);
   const primarySelection = state.selection.main;
   const cursorFrom = primarySelection.from;
-  const cursorTo = primarySelection.to;
 
   tree.iterate({
     from: 0,
@@ -24,55 +24,63 @@ function createSyntaxHidingDecorations(state: EditorState): DecorationSet {
     enter: (nodeRef) => {
       const { type, from, to } = nodeRef.node;
 
-      // Check if the current node is a "parent" markdown structure that contains marks
-      // Based on your Lezer tree, these are nodes like:
-      // ATXHeading, StrongEmphasis, Emphasis, BulletList, Link, FencedCode
-      let parentNodeForHiding = null;
-      switch (type.name) {
-        case 'ATXHeading1':
-        case 'ATXHeading2':
-        case 'ATXHeading3':
-        case 'ATXHeading4':
-        case 'ATXHeading5':
-        case 'ATXHeading6':
-        case 'StrongEmphasis':
-        case 'Emphasis':
-        case 'ListItem': // For list items, the ListItem itself is the parent
-        case 'Link':     // For links, the Link node is the parent
-        case 'FencedCode': // For fenced code blocks
-          parentNodeForHiding = nodeRef.node;
-          break;
-        default:
-          break;
+      // Identify "parent" markdown structures whose *entire* syntax should be revealed
+      // if the cursor is anywhere within them.
+      let revealSyntax = false;
+      
+      // Start with the current node, then traverse up to find a relevant parent.
+      let currentParent: SyntaxNode | null = nodeRef.node; 
+      
+      while (currentParent) {
+        if (
+          currentParent.type.name === 'ATXHeading1' ||
+          currentParent.type.name === 'ATXHeading2' ||
+          currentParent.type.name === 'ATXHeading3' ||
+          currentParent.type.name === 'ATXHeading4' ||
+          currentParent.type.name === 'ATXHeading5' ||
+          currentParent.type.name === 'ATXHeading6' ||
+          currentParent.type.name === 'StrongEmphasis' ||
+          currentParent.type.name === 'Emphasis' ||
+          currentParent.type.name === 'ListItem' ||
+          currentParent.type.name === 'FencedCode'
+        ) {
+          // If the cursor is anywhere within this parent's full range, reveal its syntax.
+          if (cursorFrom >= currentParent.from && cursorFrom <= currentParent.to) {
+            revealSyntax = true;
+            break; // Found a parent that triggers reveal, no need to go higher
+          }
+        }
+        currentParent = currentParent.parent; // Move up to the parent node
       }
 
-      if (parentNodeForHiding) {
-        const parentFrom = parentNodeForHiding.from;
-        const parentTo = parentNodeForHiding.to;
-
-        // If cursor is within the parent node's full range, we should NOT hide its marks
-        if (cursorFrom >= parentFrom && cursorFrom <= parentTo) {
-          return false; // Don't hide children of this node, and don't recurse into them for hiding
-        }
+      // If `revealSyntax` is true, we should not hide any marks within this parent.
+      if (revealSyntax) {
+          return false; // Skip hiding children of this revealed parent node
       }
 
       // If we reach here, it means the cursor is NOT in a relevant parent node,
       // so we can proceed with hiding the specific marks.
       switch (type.name) {
         case 'HeaderMark':       // e.g., '##', '###'
+          // Hide HeaderMark itself
+          for (let i = from; i < to; i++) {
+            decorations.push(zeroWidthReplaceDecoration.range(i, i + 1));
+          }
+          // Additionally, hide the space immediately following the HeaderMark if it exists
+          // and is within the same line, as per typical Markdown parsing.
+          // Check if 'to' is within document bounds and the character is a space.
+          if (to < state.doc.length && state.doc.sliceString(to, to + 1) === ' ') {
+            decorations.push(zeroWidthReplaceDecoration.range(to, to + 1));
+          }
+          break;
+
         case 'EmphasisMark':     // e.g., '**', '*', '__', '_'
         case 'BlockquoteMark':   // e.g., '>'
         case 'FencedCodeMark':   // e.g., '```'
-        case 'ListMark':         // e.g., '-', '*'
-        case 'LinkMark':         // e.g., '[', ']', '(', ')'
-          // Apply a replace decoration for *each character* within the mark's range.
           for (let i = from; i < to; i++) {
             decorations.push(zeroWidthReplaceDecoration.range(i, i + 1));
           }
           break;
-        
-        // CodeInfo ('javascript' in ```javascript) should generally not be hidden as it's part of content.
-        // URL node content ('https://www.google.com') should also not be hidden, it's displayed by the Link transformation.
       }
     }
   });
@@ -88,7 +96,6 @@ export const markdownSyntaxHiding = StateField.define<DecorationSet>({
     return createSyntaxHidingDecorations(state);
   },
   update(decorations: DecorationSet, transaction: Transaction) { 
-    // Re-evaluate decorations if document content changes or selection changes.
     if (transaction.docChanged || transaction.selection) {
       return createSyntaxHidingDecorations(transaction.state); 
     }
