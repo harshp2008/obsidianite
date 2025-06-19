@@ -52,7 +52,7 @@ function buildSyntaxHidingDecorations(view: EditorView): RangeSet<Decoration> {
     "URL",               // The actual URL part of a link (often hidden until active)
     "SetextHeadingMark", // === --- (for setext headers)
     "StrikethroughMark", // ~~
-    "MarkMark",          // == (for highlight)
+    "HighlightMark",          // == (for highlight)
   ]);
 
   // Iterate over the syntax tree to find potential delimiters
@@ -77,36 +77,32 @@ function buildSyntaxHidingDecorations(view: EditorView): RangeSet<Decoration> {
         //    the cursor is adjacent to the delimiter OR
         //    the cursor is anywhere within the *parent* markdown element that this delimiter belongs to.
         if (selection.main.empty) {
-            if (isCursorAdjacent(selection.main.head, nodeRef.from, nodeRef.to)) {
-                shouldHide = false; // Cursor is right next to the delimiter
-            } else {
-                // Check parent node. Example: For "**bold**", if cursor is on 'o', parent is StrongEmphasis.
-                // We want the ** to show if cursor is anywhere within the 'bold' word too.
-                let current: SyntaxNode | null = nodeRef.node; // FIX: Declare current as SyntaxNode | null
-                while (current) {
-                    // If the cursor is within the span of a common markdown construct (like bold, italic, code, etc.)
-                    // then its associated delimiters should be shown.
-                    if (
-                        (current.name === "StrongEmphasis" ||
-                         current.name === "Emphasis" ||
-                         current.name === "InlineCode" ||
-                         current.name === "URL" ||
-                         current.name === "Highlight" || // For ==
-                         current.name === "Strikethrough") &&
-                        selection.main.head > current.from && selection.main.head < current.to // Cursor is *inside* the content of the styled block
-                    ) {
-                        shouldHide = false;
-                        break;
-                    }
-                    // For block-level marks like ATXHeadingMark, BlockquoteMark, CodeMark (for fenced blocks)
-                    // If the cursor is anywhere on the line of the block, the mark should show.
-                    // This is more complex and might involve checking line ranges.
-                    // For now, let's focus on inline.
-
-                    current = current.parent;
-                }
-            }
-        }
+          if (isCursorAdjacent(selection.main.head, nodeRef.from, nodeRef.to)) {
+              shouldHide = false; // Cursor is right next to the *current delimiter*
+          } else {
+              let current: SyntaxNode | null = nodeRef.node;
+              while (current) {
+                  // Check if cursor is within or at the boundaries of the *parent styled block*
+                  if (
+                      (current.name === "StrongEmphasis" ||
+                       current.name === "Emphasis" ||
+                       current.name === "InlineCode" ||
+                       current.name === "URL" ||
+                       current.name === "Highlight" ||
+                       current.name === "Strikethrough" ||
+                       // Add other relevant inline/block parent types here if needed for broader reveal
+                       current.name === "ATXHeading" || // Example for headings
+                       current.name === "Blockquote" // Example for blockquotes
+                      ) &&
+                      selection.main.head >= current.from && selection.main.head <= current.to // FIX: Changed > and < to >= and <=
+                  ) {
+                      shouldHide = false;
+                      break;
+                  }
+                  current = current.parent;
+              }
+          }
+      }
         if (!shouldHide) return; // If we decided to show it, don't add hide decoration
 
         // If none of the above conditions were met, then the delimiter should be hidden.
