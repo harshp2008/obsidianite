@@ -111,16 +111,15 @@ body {
 
 /* --- Custom List Bullets --- */
 /* Style for the custom bullet widget inserted by listBulletExtension */
+/* --- Custom List Bullets (for unordered lists) --- */
 .cm-editor .cm-custom-list-bullet {
   color: #888; /* A subtle grey for the bullet */
   margin-right: 5px; /* Space between bullet and list item text */
-  /* Ensure it has a baseline alignment if needed, e.g., vertical-align: middle; */
 }
 
-/* Optionally, if CodeMirror's native cm-list-bullet still appears and you want to hide it */
-/* This might be needed if CM generates its own bullet AND we're inserting a custom one. */
+/* Hide CodeMirror's default bullet if it appears and conflicts */
 .cm-editor .cm-list-bullet {
-    display: none !important; /* Hide CodeMirror's default bullet entirely */
+    display: none !important; 
 }
 
 /* --- NO OTHER HIDING CSS --- */
