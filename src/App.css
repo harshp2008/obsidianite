@@ -1,21 +1,22 @@
 /* src/App.css */
 
+/* General App Structure */
 #root {
   width: 100%;
-  height: calc(100vh - 40px); /* Adjusting height for header/footer if any, or just fixed viewport */
-  background-color: #ffffff; /* This background will be visible if App doesn't fill #root */
+  height: calc(100vh - 40px);
+  background-color: #ffffff;
   flex-grow: 1;
   padding: 20px;
 }
 
 .App {
-  font-family: sans-serif; /* Example font-family for the whole app */
-  color: #abb2bf; /* Default text color, consistent with oneDark theme */
-  background-color: #282c34; /* Dark background similar to oneDark theme */
+  font-family: sans-serif;
+  color: #abb2bf;
+  background-color: #282c34;
   display: flex;
   flex-direction: column;
   max-width: 100%;
-  height: 100%; /* Ensure App takes full height of #root */
+  height: 100%;
 }
 
 .app-header {
@@ -49,123 +50,122 @@
 }
 
 .editor-container {
-  flex-grow: 1; /* Allow editor to take available space */
-  overflow: hidden; /* Prevent editor content from overflowing */
+  flex-grow: 1;
+  overflow: hidden;
 }
 
 /* --- CodeMirror Base Styles --- */
-.cm-editor {
-  height: 100%; /* Make editor take full height of its container */
-  outline: none !important; /* Remove default CodeMirror outline on focus */
+/* Increased specificity for cm-editor to reduce !important */
+.App .cm-editor {
+  height: 100%;
+  outline: none; /* Try without !important. If outline reappears on focus, add back. */
   padding-left: 20px;
   padding-right: 20px;
 }
 
 /* Base font size and line height for the editor text */
-.cm-content {
-  font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace; /* Consistent monospace font */
-  font-size: 1em; /* Default font size for content */
-  line-height: 1.4; /* Default line height for content, adjust as needed */
-  padding-top: 20px !important;
-  padding-bottom: 20px !important;
+.App .cm-editor .cm-content {
+  font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 1em;
+  line-height: 1.4;
+  padding-top: 20px;    /* Try without !important. If not applied, add back. */
+  padding-bottom: 20px; /* Try without !important. If not applied, add back. */
 }
 
-/* Adjust line number gutter for consistency */
-.cm-gutters {
-  background-color: #282c34;
-  color: #636d83; /* Lighter color for line numbers */
-  border-right: 1px solid #3e4451;
-  padding: 0 5px;
-}
 
 /* --- Syntax Highlighting (from customHighlightStyle and oneDark theme) --- */
-/* Headers - ADDED FONT-SIZE */
-.cm-editor .cm-header-1 {
-  font-size: 2.2em !important;
-  font-weight: bold !important;
-  color: #e06c75 !important;
-}
-
-.cm-editor .cm-header-2 {
-  font-size: 1.8em !important;
-  font-weight: bold !important;
-  color: #e06c75 !important;
-}
-
-.cm-editor .cm-header-3 {
-  font-size: 1.5em !important;
-  font-weight: bold !important;
-  color: #e06c75 !important;
-}
-
-.cm-editor .cm-header-4 {
-  font-size: 1.2em !important;
-  font-weight: bold !important;
-  color: #e06c75 !important;
-}
-
-.cm-editor .cm-header-5 {
-  font-size: 1em !important; /* Can be same as body text or slightly larger */
-  font-weight: bold !important;
-  color: #e06c75 !important;
-}
-
-.cm-editor .cm-header-6 {
-  font-size: 0.9em !important; /* Can be smaller than body text */
-  font-weight: bold !important;
-  color: #e06c75 !important;
-}
+/* Headers - Increased specificity, trying to remove !important */
+.App .cm-editor .cm-header-1 { color: #e06c75; font-size: 2.2em; font-weight: bold; }
+.App .cm-editor .cm-header-2 { color: #e06c75; font-size: 1.8em; font-weight: bold; }
+.App .cm-editor .cm-header-3 { color: #e06c75; font-size: 1.5em; font-weight: bold; }
+.App .cm-editor .cm-header-4 { color: #e06c75; font-size: 1.2em; font-weight: bold; }
+.App .cm-editor .cm-header-5 { color: #e06c75; font-size: 1em;   font-weight: bold; }
+.App .cm-editor .cm-header-6 { color: #e06c75; font-size: 0.9em; font-weight: bold; }
 
 /* Bold */
-.cm-editor .cm-strong {
-  font-weight: bold !important;
-  color: #c678dd !important;
-}
+.App .cm-editor .cm-strong { color: #c678dd; font-weight: bold; }
 
 /* Italic */
-.cm-editor .cm-emphasis {
-  font-style: italic !important;
-  color: #e5c07b !important;
+.App .cm-editor .cm-emphasis { color: #e5c07b; font-style: italic; }
+
+/* Highlight styling */
+.App .cm-editor .cm-highlight { 
+  background-color: rgba(255, 242, 60, 0.7); 
+  color: #000; 
+
+}
+  
+.cm-widgetBuffer:has(+ .cm-highlight:not(.ͼ13))  {
+  padding: 0px;
 }
 
-/* Highlight styling (if you ever implement a Lezer extension for it) */
-.cm-editor .cm-highlight {
-  background-color: #5f6b4d !important;
-  color: #a4d35e !important;
+.cm-widgetBuffer:not(:has(+ .cm-highlight:not(.ͼ13))) {
+  padding-right: 0px 
+
 }
+
+.cm-highlight:not(.ͼ13) {
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+
+
+.ͼ13:has(+ .cm-highlight:not(.ͼ13))  {
+  padding-left: 2px;
+
+
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+  
+}
+
+.ͼ13.cm-highlight:not(:has(+ .cm-highlight:not(.ͼ13))) {
+  padding-right: 2px;
+
+
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;  
+
+}
+
+
 
 /* Strikethrough styling */
-.cm-editor .cm-strikethrough {
-  text-decoration: line-through !important;
-  color: #888 !important;
-}
+.App .cm-editor .cm-strikethrough { text-decoration: line-through; color: #888; }
 
 /* Inline Code styling */
-.cm-editor .cm-inline-code, .cm-editor .cm-monospace {
-  font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace !important;
-  background-color: #3e4451 !important;
-  color: #98c379 !important;
-  padding: 2px 4px !important;
-  border-radius: 3px !important;
-  line-height: 1.4 !important; /* Match .cm-content line-height */
+ .cm-inline-code {
+  font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  
+  background-color: rgba(126, 140, 168, 0.5);
+  color: #98c379;
+  padding: 0px 2px;
+  border-radius: 3px;
+  line-height: 1.4;
 }
+
+
+
+
 
 /* Links */
-.cm-editor .cm-link {
-  color: #61afef !important;
-  text-decoration: underline !important;
-}
+.App .cm-editor .cm-link { color: #61afef; text-decoration: underline; }
 
 /* URLs within links (e.g., the "https://www.google.com" part) */
-.cm-editor .cm-url {
-  color: #61afef !important;
-}
+.App .cm-editor .cm-url { color: #61afef; }
 
 /* Blockquote */
-.cm-editor .cm-blockquote {
-  border-left: 4px solid #61afef !important;
-  padding-left: 1em !important;
-  color: #abb2bf !important;
+.App .cm-editor .cm-blockquote {
+  border-left: 4px solid #61afef;
+  padding-left: 1em;
+  color: #abb2bf;
+}
+
+/* Target the editor environment and your custom highlight mark class */
+.App .cm-editor .cmt-HighlightMark {
+  color: rgba(128, 128, 128, 0.6);
+  font-size: 0.9em;
 }
 
 /* --- Specific Hiding/Display Adjustments for Syntax --- */
@@ -185,36 +185,21 @@
 }
 
 /* Adjustments for the cursor */
-.cm-cursor {
-  border-left: 1.5px solid #528bff !important;
+.App .cm-editor .cm-cursor {
+  border-left: 1.5px solid #528bff; /* Try without !important. If it doesn't apply, add back. */
 }
 
 /* Adjust selection background */
 .cm-selectionBackground {
-  background-color: #3a3f4b !important;
+  background-color: rgba(141, 179, 255, 0.3) !important;
+  
+  position:relative;
+  z-index:-1 !important;
+
 }
 
-/* Active line background */
-.cm-activeLine {
-  background-color: #2c313a;
-}
-
-/* Active line gutter background */
-.cm-activeLineGutter {
-  background-color: #2c313a !important;
-}
-
-/* In your main CSS file (e.g., src/index.css) */
-
-/* Target the editor environment and your custom highlight mark class */
-.cm-editor .cmt-HighlightMark {
-  /* Make the text gray and slightly transparent */
-  color: rgba(128, 128, 128, 0.6);
-  /* Make the font slightly smaller */
-  font-size: 0.9em;
-  /* You could also slightly decrease opacity if desired */
-  /* opacity: 0.5; */
-}
-
-/**/
+.cm-selectionLayer {
+  z-index: -1 !important;
+  
+} 
 
