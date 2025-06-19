@@ -1,4 +1,4 @@
-import { Extension, EditorSelection, EditorState, SelectionRange, RangeSet } from '@codemirror/state';
+import { Extension, SelectionRange, RangeSet } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin, WidgetType, ViewUpdate } from '@codemirror/view';
 import { syntaxTree } from '@codemirror/language';
 import { RangeSetBuilder } from '@codemirror/state';
