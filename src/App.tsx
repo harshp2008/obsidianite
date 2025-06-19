@@ -1,11 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { EditorView, keymap } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
-import type { Extension } from '@codemirror/state'; // Fix: type-only import
+import type { Extension } from '@codemirror/state';
 
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+import { GFM } from '@lezer/markdown';
+
 import { syntaxHighlighting, HighlightStyle } from '@codemirror/language';
-import { tags } from '@lezer/highlight';
+import { tags, Tag } from '@lezer/highlight';
 
 import { javascript } from '@codemirror/lang-javascript';
 
@@ -32,23 +34,30 @@ import { markdownSyntaxHiding } from './extensions/markdownSyntaxHiding';
 import './App.css';
 import { listBulletExtension } from './extensions/markdownListBulletExtension';
 
+export const customTags = {
+  mark: Tag.define()
+};
+
 const customHighlightStyle = HighlightStyle.define([
-  { tag: tags.heading1, fontSize: '2.5em', fontWeight: 'bold', color: '#e06c75' },
-  { tag: tags.heading2, fontSize: '2em', fontWeight: 'bold', color: '#e06c75' },
-  { tag: tags.heading3, fontSize: '1.75em', fontWeight: 'bold', color: '#e06c75' },
-  { tag: tags.heading4, fontSize: '1.5em', fontWeight: 'bold', color: '#e06c75' },
-  { tag: tags.heading5, fontSize: '1.25em', fontWeight: 'bold', color: '#e06c75' },
-  { tag: tags.heading6, fontSize: '1.1em', fontWeight: 'bold', color: '#e06c75' },
+  { tag: tags.heading1, class: 'cm-header cm-header-1' },
+  { tag: tags.heading2, class: 'cm-header cm-header-2' },
+  { tag: tags.heading3, class: 'cm-header cm-header-3' },
+  { tag: tags.heading4, class: 'cm-header cm-header-4' },
+  { tag: tags.heading5, class: 'cm-header cm-header-5' },
+  { tag: tags.heading6, class: 'cm-header cm-header-6' },
 
-  { tag: tags.strong, fontWeight: 'bold', color: '#c678dd' },
-  { tag: tags.emphasis, fontStyle: 'italic', color: '#e5c07b' },
+  { tag: tags.strong, class: 'cm-strong' },
+  { tag: tags.emphasis, class: 'cm-emphasis' },
 
-  { tag: tags.link, color: '#61afef', textDecoration: 'underline' },
-  { tag: tags.url, color: '#61afef' },
+  { tag: tags.link, class: 'cm-link' },
+  { tag: tags.url, class: 'cm-url' },
 
-  { tag: tags.monospace, color: '#f8f8f2' }, // Use monospace for inline code text
-  // { tag: tags.code, color: '#98c379' }, // REMOVED: `tags.code` is not directly exposed this way. Fenced code block styling is handled by JS language support.
-  // { tag: tags.listMark, color: '#e5c07b' }, // REMOVED: This will be hidden by markdownSyntaxHiding
+  { tag: tags.monospace, class: 'cm-inline-code',
+  },
+
+  { tag: tags.strikethrough, class: 'cm-strikethrough' },
+  { tag: customTags.mark, class: 'cm-highlight' },
+  { tag: tags.quote, class: 'cm-blockquote' }
 ]);
 
 function App() {
@@ -77,6 +86,10 @@ function App() {
 
 This is some **bold** text and *italic* text.
 
+==highlight==
+~~strikethrough~~
+\`inline code\`
+
 ### A Subheading
 
 \`\`\`javascript
@@ -84,8 +97,13 @@ console.log("Hello from a JS code block!");
 const x = 10;
 \`\`\`
 
+1. Ordered item 1
+2. Ordered item 2
+
 - List item 1
 - List item 2
+
+> A blockquote
 
 [Link to Google](https://www.google.com)
 `,
@@ -93,6 +111,7 @@ const x = 10;
           ...basicExtensionsWithoutLineNumbers,
           markdown({
             base: markdownLanguage,
+            extensions: [GFM],
           }),
           javascript(),
           syntaxHighlighting(customHighlightStyle),

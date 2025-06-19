@@ -1,91 +1,151 @@
-// src/extensions/markdownSyntaxHiding.ts
-import { EditorView, Decoration, type DecorationSet } from '@codemirror/view';
-import { StateField, type Transaction, EditorState, Range } from '@codemirror/state';
+import { ViewPlugin, Decoration } from '@codemirror/view';
+import type { DecorationSet, ViewUpdate } from '@codemirror/view';
 import { syntaxTree } from '@codemirror/language';
+import { EditorView } from '@codemirror/view';
 import type { SyntaxNode } from '@lezer/common';
+import { Range } from '@codemirror/state';
 
-const zeroWidthReplaceDecoration = Decoration.replace({
-  content: '​' // Zero-width space character (U+200B)
-});
+export const markdownSyntaxHiding = ViewPlugin.fromClass(class {
+  decorations: DecorationSet;
 
-function createSyntaxHidingDecorations(state: EditorState): DecorationSet {
-  const decorations: Array<Range<Decoration>> = [];
-  const tree = syntaxTree(state);
-  const primarySelection = state.selection.main;
-  const cursorFrom = primarySelection.from;
-
-  tree.iterate({
-    from: 0,
-    to: state.doc.length,
-    enter: (nodeRef) => {
-      const { type, from, to } = nodeRef.node;
-
-      let revealSyntax = false;
-      let currentParent: SyntaxNode | null = nodeRef.node; 
-      
-      while (currentParent) {
-        if (
-          currentParent.type.name === 'ATXHeading1' ||
-          currentParent.type.name === 'ATXHeading2' ||
-          currentParent.type.name === 'ATXHeading3' ||
-          currentParent.type.name === 'ATXHeading4' ||
-          currentParent.type.name === 'ATXHeading5' ||
-          currentParent.type.name === 'ATXHeading6' ||
-          currentParent.type.name === 'StrongEmphasis' || // This parent will reveal **
-          currentParent.type.name === 'Emphasis' ||     // This parent will reveal *
-          currentParent.type.name === 'FencedCode'      // This parent will reveal ```
-          // ListItem (both ordered and unordered) will NOT trigger revealSyntax from here.
-          // Ordered list numbers should always be visible.
-          // Unordered list marks are handled by listBulletExtension's widget logic.
-        ) {
-          if (cursorFrom >= currentParent.from && cursorFrom <= currentParent.to) {
-            revealSyntax = true;
-            break;
-          }
-        }
-        currentParent = currentParent.parent;
-      }
-
-      if (revealSyntax) {
-          return false; // Stop processing children if this parent's syntax should be revealed
-      }
-
-      switch (type.name) {
-        case 'HeaderMark':
-          for (let i = from; i < to; i++) {
-            decorations.push(zeroWidthReplaceDecoration.range(i, i + 1));
-          }
-          if (to < state.doc.length && state.doc.sliceString(to, to + 1) === ' ') {
-            decorations.push(zeroWidthReplaceDecoration.range(to, to + 1));
-          }
-          break;
-
-        case 'EmphasisMark':     // RE-ADDED: This handles hiding ** and * when inactive
-        case 'BlockquoteMark':   // RE-ADDED: This handles hiding > when inactive
-        case 'FencedCodeMark':   // RE-ADDED: This handles hiding ``` when inactive
-          for (let i = from; i < to; i++) {
-            decorations.push(zeroWidthReplaceDecoration.range(i, i + 1));
-          }
-          break;
-        // ListMark is intentionally NOT here, as per our revised strategy.
-      }
-    }
-  });
-
-  return Decoration.set(decorations);
-}
-
-export const markdownSyntaxHiding = StateField.define<DecorationSet>({
-  create(state) {
-    return createSyntaxHidingDecorations(state);
-  },
-  update(decorations: DecorationSet, transaction: Transaction) { 
-    if (transaction.docChanged || transaction.selection) {
-      return createSyntaxHidingDecorations(transaction.state); 
-    }
-    return decorations;
-  },
-  provide(field) {
-    return EditorView.decorations.from(field);
+  constructor(view: EditorView) {
+    this.decorations = this.buildDecorations(view);
   }
+
+  update(update: ViewUpdate) {
+    if (update.docChanged || update.viewportChanged || update.selectionSet) {
+      this.decorations = this.buildDecorations(update.view);
+    }
+  }
+
+  buildDecorations(view: EditorView) {
+    const widgets: Range<Decoration>[] = [];
+
+    // Default hidden mark for display: none
+    const hiddenMark = Decoration.mark({
+      attributes: {
+        style: 'display: none;',
+      },
+    });
+
+    // Decoration for replacing content (used for inline code markers)
+    // This will effectively remove the characters from the visual layout.
+    const replaceMark = Decoration.replace({}); // No widget, just replaces the range with nothing
+
+
+    const revealSyntaxForNode = (nodeFrom: number, nodeTo: number) => {
+      const selection = view.state.selection.main;
+      return (selection.from >= nodeFrom && selection.from <= nodeTo) ||
+             (selection.to >= nodeFrom && selection.to <= nodeTo);
+    };
+
+    for (let { from, to } of view.visibleRanges) {
+      syntaxTree(view.state).iterate({
+        from, to,
+        enter: (nodeRef) => {
+          const node = nodeRef.node;
+          const name = node.type.name;
+
+          if (
+            name === 'CodeBlock' ||
+            name === 'URL' ||
+            name === 'ImageDescription'
+          ) {
+            return false;
+          }
+
+          switch (name) {
+            case 'ATXHeading1':
+            case 'ATXHeading2':
+            case 'ATXHeading3':
+            case 'ATXHeading4':
+            case 'ATXHeading5':
+            case 'ATXHeading6': {
+              node.getChildren('HeaderMark').forEach((markNode: SyntaxNode) => {
+                  const charAfterMarkPos = markNode.to;
+                  let hideTo = markNode.to;
+
+                  if (view.state.doc.sliceString(charAfterMarkPos, charAfterMarkPos + 1) === ' ') {
+                      hideTo++;
+                  }
+
+                  if (!revealSyntaxForNode(node.from, node.to)) {
+                      widgets.push(hiddenMark.range(markNode.from, hideTo));
+                  }
+              });
+              break;
+            }
+            case 'Blockquote': {
+              node.getChildren('QuoteMark').forEach((markNode: SyntaxNode) => {
+                if (!revealSyntaxForNode(node.from, node.to)) {
+                  widgets.push(hiddenMark.range(markNode.from, markNode.to));
+                }
+              });
+              break;
+            }
+            case 'Emphasis': {
+              node.getChildren('EmphasisMark').forEach((markNode: SyntaxNode) => {
+                  if (!revealSyntaxForNode(node.from, node.to)) {
+                      widgets.push(hiddenMark.range(markNode.from, markNode.to));
+                  }
+              });
+              break;
+            }
+            case 'StrongEmphasis': {
+                node.getChildren('EmphasisMark').forEach((markNode: SyntaxNode) => {
+                    if (!revealSyntaxForNode(node.from, node.to)) {
+                        widgets.push(hiddenMark.range(markNode.from, markNode.to));
+                    }
+                });
+                break;
+            }
+            case 'Strikethrough': {
+                node.getChildren('StrikethroughMark').forEach((markNode: SyntaxNode) => {
+                    if (!revealSyntaxForNode(node.from, node.to)) {
+                        widgets.push(hiddenMark.range(markNode.from, markNode.to));
+                    }
+                });
+                break;
+            }
+            case 'InlineCode': {
+                // Use replaceMark for inline code backticks
+                node.getChildren('CodeMark').forEach((markNode: SyntaxNode) => {
+                    if (!revealSyntaxForNode(node.from, node.to)) {
+                        // Apply replace decoration only if NOT revealing syntax
+                        widgets.push(replaceMark.range(markNode.from, markNode.to)); // Use replaceMark
+                    }
+                });
+                break;
+            }
+            case 'Link':
+            case 'Image': {
+                node.getChildren('LinkMark').forEach((markNode: SyntaxNode) => {
+                    if (!revealSyntaxForNode(node.from, node.to)) {
+                        widgets.push(hiddenMark.range(markNode.from, markNode.to));
+                    }
+                });
+                break;
+            }
+            case 'ListItem': {
+                node.getChildren('ListMark').forEach((markNode: SyntaxNode) => {
+                    const markText = view.state.doc.sliceString(markNode.from, markNode.to);
+
+                    if (markText.match(/^\d+\./)) {
+                        return;
+                    }
+
+                    if (!revealSyntaxForNode(node.from, node.to)) {
+                        widgets.push(hiddenMark.range(markNode.from, markNode.to));
+                    }
+                });
+                break;
+            }
+          }
+        },
+      });
+    }
+    return Decoration.set(widgets, true);
+  }
+}, {
+  decorations: v => v.decorations
 });
