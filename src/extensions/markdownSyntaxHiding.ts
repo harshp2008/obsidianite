@@ -1,170 +1,139 @@
-// src/extensions/markdownSyntaxHiding.ts
-import { ViewPlugin, Decoration } from '@codemirror/view';
-import type { DecorationSet, ViewUpdate } from '@codemirror/view';
+import { Extension, EditorSelection, EditorState, SelectionRange, RangeSet } from '@codemirror/state';
+import { Decoration, EditorView, ViewPlugin, WidgetType, ViewUpdate } from '@codemirror/view';
 import { syntaxTree } from '@codemirror/language';
-import { EditorView } from '@codemirror/view';
-import type { SyntaxNode } from '@lezer/common';
-import { Range } from '@codemirror/state';
+import { RangeSetBuilder } from '@codemirror/state';
+import { SyntaxNode } from '@lezer/common'; // New: Import SyntaxNode
 
-// Import highlightTags for direct comparison if needed, or rely on node.type.name
-import { highlightTags } from './markdownHighlightExtension'; // NEW IMPORT
+// A WidgetType to replace hidden delimiters. Using a zero-width space
+// helps maintain cursor navigation somewhat, though it can still be tricky.
+class HiddenDelimiterWidget extends WidgetType {
+  toDOM() {
+    const span = document.createElement("span");
+    span.textContent = ""; // Makes the span effectively invisible
+    span.setAttribute("aria-hidden", "true"); // Helps with accessibility tools
+    return span;
+  }
+  // Important for selection behavior: ignore events on the widget
+  ignoreEvent() { return true; }
+}
 
-export const markdownSyntaxHiding = ViewPlugin.fromClass(class {
-  decorations: DecorationSet;
+// The decoration to apply when hiding a delimiter
+const hiddenDelimiterDecoration = Decoration.replace({
+  widget: new HiddenDelimiterWidget(),
+  side: 0 // Prevents cursor from being stuck inside the replaced range
+});
+
+// Helper function to check if a selection range intersects with a node's range
+function intersects(selectionRange: SelectionRange, nodeFrom: number, nodeTo: number): boolean {
+  // A range [A, B) intersects with [C, D) if A < D and B > C
+  return selectionRange.from < nodeTo && selectionRange.to > nodeFrom;
+}
+
+// Helper function to check if cursor is adjacent to a node (useful for hiding logic)
+function isCursorAdjacent(head: number, nodeFrom: number, nodeTo: number): boolean {
+  return head === nodeFrom || head === nodeTo;
+}
+
+// This function builds the set of decorations to apply for syntax hiding.
+function buildSyntaxHidingDecorations(view: EditorView): RangeSet<Decoration> {
+  const builder = new RangeSetBuilder<Decoration>();
+  const tree = syntaxTree(view.state);
+  const { state } = view;
+  const selection = state.selection; // Get the full selection object, which includes 'main' and 'ranges'
+
+  // Define which types of nodes represent markdown delimiters we want to hide
+  const hideableMarkNames = new Set([
+    "EmphasisMark",      // * _
+    "StrongEmphasisMark", // ** __
+    "ATXHeadingMark",    // # (for headers)
+    "BlockquoteMark",    // >
+    "CodeMark",          // ` `` ``` (for inline code or code blocks)
+    "LinkMark",          // [ ] ( ) (for link brackets/parentheses)
+    "URL",               // The actual URL part of a link (often hidden until active)
+    "SetextHeadingMark", // === --- (for setext headers)
+    "StrikethroughMark", // ~~
+    "MarkMark",          // == (for highlight)
+  ]);
+
+  // Iterate over the syntax tree to find potential delimiters
+  tree.iterate({
+    from: 0,
+    to: state.doc.length,
+    enter: (nodeRef) => {
+      if (hideableMarkNames.has(nodeRef.name)) {
+        let shouldHide = true; // Assume we should hide by default
+
+        // Condition 1: If any active selection range (non-empty or empty cursor range) intersects with the delimiter node.
+        // This handles direct selection of the delimiter itself.
+        for (const range of selection.ranges) {
+          if (intersects(range, nodeRef.from, nodeRef.to)) {
+            shouldHide = false;
+            break;
+          }
+        }
+        if (!shouldHide) return; // If already decided to show, skip to next node
+
+        // Condition 2: If the cursor is present (empty selection) AND
+        //    the cursor is adjacent to the delimiter OR
+        //    the cursor is anywhere within the *parent* markdown element that this delimiter belongs to.
+        if (selection.main.empty) {
+            if (isCursorAdjacent(selection.main.head, nodeRef.from, nodeRef.to)) {
+                shouldHide = false; // Cursor is right next to the delimiter
+            } else {
+                // Check parent node. Example: For "**bold**", if cursor is on 'o', parent is StrongEmphasis.
+                // We want the ** to show if cursor is anywhere within the 'bold' word too.
+                let current: SyntaxNode | null = nodeRef.node; // FIX: Declare current as SyntaxNode | null
+                while (current) {
+                    // If the cursor is within the span of a common markdown construct (like bold, italic, code, etc.)
+                    // then its associated delimiters should be shown.
+                    if (
+                        (current.name === "StrongEmphasis" ||
+                         current.name === "Emphasis" ||
+                         current.name === "InlineCode" ||
+                         current.name === "URL" ||
+                         current.name === "Highlight" || // For ==
+                         current.name === "Strikethrough") &&
+                        selection.main.head > current.from && selection.main.head < current.to // Cursor is *inside* the content of the styled block
+                    ) {
+                        shouldHide = false;
+                        break;
+                    }
+                    // For block-level marks like ATXHeadingMark, BlockquoteMark, CodeMark (for fenced blocks)
+                    // If the cursor is anywhere on the line of the block, the mark should show.
+                    // This is more complex and might involve checking line ranges.
+                    // For now, let's focus on inline.
+
+                    current = current.parent;
+                }
+            }
+        }
+        if (!shouldHide) return; // If we decided to show it, don't add hide decoration
+
+        // If none of the above conditions were met, then the delimiter should be hidden.
+        builder.add(nodeRef.from, nodeRef.to, hiddenDelimiterDecoration);
+      }
+    }
+  });
+
+  return builder.finish();
+}
+
+// The ViewPlugin that provides the decorations to the editor view.
+export const markdownSyntaxHiding: Extension = ViewPlugin.fromClass(class {
+  decorations: RangeSet<Decoration>;
 
   constructor(view: EditorView) {
-    this.decorations = this.buildDecorations(view);
+    // Initialize decorations when the plugin is created
+    this.decorations = buildSyntaxHidingDecorations(view);
   }
 
   update(update: ViewUpdate) {
-    if (update.docChanged || update.viewportChanged || update.selectionSet) {
-      this.decorations = this.buildDecorations(update.view);
+    // Recompute decorations only when the document content or the selection changes
+    if (update.docChanged || update.selectionSet) {
+      this.decorations = buildSyntaxHidingDecorations(update.view);
     }
-  }
-
-  buildDecorations(view: EditorView) {
-    const widgets: Range<Decoration>[] = [];
-
-    const hiddenMark = Decoration.mark({
-      attributes: {
-        style: 'display: none;',
-      },
-    });
-
-    const replaceMark = Decoration.replace({}); // Used for inline code
-
-
-    const revealSyntaxForNode = (nodeFrom: number, nodeTo: number) => {
-      const selection = view.state.selection.main;
-      return (selection.from >= nodeFrom && selection.from <= nodeTo) ||
-             (selection.to >= nodeFrom && selection.to <= nodeTo);
-    };
-
-    for (let { from, to } of view.visibleRanges) {
-      syntaxTree(view.state).iterate({
-        from, to,
-        enter: (nodeRef) => {
-          const node = nodeRef.node;
-          const name = node.type.name;
-
-          if (
-            name === 'CodeBlock' ||
-            name === 'URL' ||
-            name === 'ImageDescription'
-          ) {
-            return false;
-          }
-
-          switch (name) {
-            case 'ATXHeading1':
-            case 'ATXHeading2':
-            case 'ATXHeading3':
-            case 'ATXHeading4':
-            case 'ATXHeading5':
-            case 'ATXHeading6': {
-              node.getChildren('HeaderMark').forEach((markNode: SyntaxNode) => {
-                  const charAfterMarkPos = markNode.to;
-                  let hideTo = markNode.to;
-
-                  if (view.state.doc.sliceString(charAfterMarkPos, charAfterMarkPos + 1) === ' ') {
-                      hideTo++;
-                  }
-
-                  if (!revealSyntaxForNode(node.from, node.to)) {
-                      widgets.push(hiddenMark.range(markNode.from, hideTo));
-                  }
-              });
-              break;
-            }
-            case 'Blockquote': {
-              node.getChildren('QuoteMark').forEach((markNode: SyntaxNode) => {
-                if (!revealSyntaxForNode(node.from, node.to)) {
-                  widgets.push(hiddenMark.range(markNode.from, markNode.to));
-                }
-              });
-              break;
-            }
-            case 'Emphasis': {
-              node.getChildren('EmphasisMark').forEach((markNode: SyntaxNode) => {
-                  if (!revealSyntaxForNode(node.from, node.to)) {
-                      widgets.push(hiddenMark.range(markNode.from, markNode.to));
-                  }
-              });
-              break;
-            }
-            case 'StrongEmphasis': {
-                node.getChildren('EmphasisMark').forEach((markNode: SyntaxNode) => {
-                    if (!revealSyntaxForNode(node.from, node.to)) {
-                        widgets.push(hiddenMark.range(markNode.from, markNode.to));
-                    }
-                });
-                break;
-            }
-            case 'Strikethrough': {
-                node.getChildren('StrikethroughMark').forEach((markNode: SyntaxNode) => {
-                    if (!revealSyntaxForNode(node.from, node.to)) {
-                        widgets.push(hiddenMark.range(markNode.from, markNode.to));
-                    }
-                });
-                break;
-            }
-            case 'Mark': { // NEW CASE FOR HIGHLIGHT
-                // Assuming 'Mark' node and 'MarkMark' children from custom extension
-                node.getChildren('MarkMark').forEach((markNode: SyntaxNode) => {
-                    if (!revealSyntaxForNode(node.from, node.to)) {
-                        widgets.push(hiddenMark.range(markNode.from, markNode.to));
-                    }
-                });
-                break;
-            }
-            case 'InlineCode': {
-                node.getChildren('CodeMark').forEach((markNode: SyntaxNode) => {
-                    if (!revealSyntaxForNode(node.from, node.to)) {
-                        widgets.push(replaceMark.range(markNode.from, markNode.to));
-                    }
-                });
-                break;
-            }
-            case 'Link':
-            case 'Image': {
-                node.getChildren('LinkMark').forEach((markNode: SyntaxNode) => {
-                    if (!revealSyntaxForNode(node.from, node.to)) {
-                        widgets.push(hiddenMark.range(markNode.from, markNode.to));
-                    }
-                });
-                break;
-            }
-            case 'ListItem': {
-                node.getChildren('ListMark').forEach((markNode: SyntaxNode) => {
-                    const markText = view.state.doc.sliceString(markNode.from, markNode.to);
-
-                    if (markText.match(/^\d+\./)) {
-                        return;
-                    }
-
-                    if (!revealSyntaxForNode(node.from, node.to)) {
-                        widgets.push(hiddenMark.range(markNode.from, markNode.to));
-                    }
-                });
-                break;
-            }
-
-            case 'Highlight': { // Changed from 'Mark' to 'Highlight'
-              node.getChildren('HighlightMark').forEach((markNode: SyntaxNode) => { // Changed from 'MarkMark' to 'HighlightMark'
-                  if (!revealSyntaxForNode(node.from, node.to)) {
-                      widgets.push(hiddenMark.range(markNode.from, markNode.to));
-                  }
-              });
-              break;
-            }
-
-
-          }
-        },
-      });
-    }
-    return Decoration.set(widgets, true);
   }
 }, {
+  // This makes the decorations available to the EditorView
   decorations: v => v.decorations
 });

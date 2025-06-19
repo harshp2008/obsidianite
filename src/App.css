@@ -196,7 +196,7 @@
 
 /* Active line background */
 .cm-activeLine {
-  background-color: #2c313a !important;
+  background-color: #2c313a;
 }
 
 /* Active line gutter background */
@@ -215,3 +215,6 @@
   /* You could also slightly decrease opacity if desired */
   /* opacity: 0.5; */
 }
+
+/**/
+
