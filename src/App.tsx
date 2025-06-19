@@ -1,10 +1,12 @@
+// src/App.tsx
+import React from 'react';
 import { useEffect, useRef } from 'react';
 import { EditorView, keymap } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
 import type { Extension } from '@codemirror/state';
 
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
-import { GFM } from '@lezer/markdown';
+import { GFM } from '@lezer/markdown'; // Keep GFM for strikethrough, etc.
 
 import { syntaxHighlighting, HighlightStyle } from '@codemirror/language';
 import { tags, Tag } from '@lezer/highlight';
@@ -12,7 +14,7 @@ import { tags, Tag } from '@lezer/highlight';
 import { javascript } from '@codemirror/lang-javascript';
 
 import { history, historyKeymap } from '@codemirror/commands';
-import { defaultKeymap } from '@codemirror/commands';
+import { defaultKeymap } from '@codemirror/commands'; // Corrected import
 import { highlightSelectionMatches, searchKeymap } from '@codemirror/search';
 import { lintKeymap } from '@codemirror/lint';
 
@@ -30,12 +32,16 @@ import { oneDark } from '@codemirror/theme-one-dark';
 import { markdownLinkTransformation } from './extensions/markdownLinkTransformation';
 import { logLezerTree } from './utils/lezerInspector';
 import { markdownSyntaxHiding } from './extensions/markdownSyntaxHiding';
-
-import './App.css';
 import { listBulletExtension } from './extensions/markdownListBulletExtension';
 
+// Import the new highlight extension
+import { markdownHighlightExtension, highlightTags } from './extensions/markdownHighlightExtension'; // NEW IMPORT
+
+import './App.css';
+
+// Update customTags to include 'mark' mapped to highlightTags.highlight
 export const customTags = {
-  mark: Tag.define()
+  mark: highlightTags.highlight // Mapped to the content tag of our highlight extension
 };
 
 const customHighlightStyle = HighlightStyle.define([
@@ -53,10 +59,11 @@ const customHighlightStyle = HighlightStyle.define([
   { tag: tags.url, class: 'cm-url' },
 
   { tag: tags.monospace, class: 'cm-inline-code',
+    lineHeight: 'normal',
   },
 
   { tag: tags.strikethrough, class: 'cm-strikethrough' },
-  { tag: customTags.mark, class: 'cm-highlight' },
+  { tag: customTags.mark, class: 'cm-highlight' }, // This will now apply to 'Mark' nodes created by our extension
   { tag: tags.quote, class: 'cm-blockquote' }
 ]);
 
@@ -111,7 +118,7 @@ const x = 10;
           ...basicExtensionsWithoutLineNumbers,
           markdown({
             base: markdownLanguage,
-            extensions: [GFM],
+            extensions: [GFM, markdownHighlightExtension], // ADD YOUR CUSTOM EXTENSION HERE
           }),
           javascript(),
           syntaxHighlighting(customHighlightStyle),

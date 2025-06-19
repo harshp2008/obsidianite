@@ -203,3 +203,15 @@
 .cm-activeLineGutter {
   background-color: #2c313a !important;
 }
+
+/* In your main CSS file (e.g., src/index.css) */
+
+/* Target the editor environment and your custom highlight mark class */
+.cm-editor .cmt-HighlightMark {
+  /* Make the text gray and slightly transparent */
+  color: rgba(128, 128, 128, 0.6);
+  /* Make the font slightly smaller */
+  font-size: 0.9em;
+  /* You could also slightly decrease opacity if desired */
+  /* opacity: 0.5; */
+}

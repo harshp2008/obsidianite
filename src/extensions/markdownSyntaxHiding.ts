@@ -1,9 +1,13 @@
+// src/extensions/markdownSyntaxHiding.ts
 import { ViewPlugin, Decoration } from '@codemirror/view';
 import type { DecorationSet, ViewUpdate } from '@codemirror/view';
 import { syntaxTree } from '@codemirror/language';
 import { EditorView } from '@codemirror/view';
 import type { SyntaxNode } from '@lezer/common';
 import { Range } from '@codemirror/state';
+
+// Import highlightTags for direct comparison if needed, or rely on node.type.name
+import { highlightTags } from './markdownHighlightExtension'; // NEW IMPORT
 
 export const markdownSyntaxHiding = ViewPlugin.fromClass(class {
   decorations: DecorationSet;
@@ -21,16 +25,13 @@ export const markdownSyntaxHiding = ViewPlugin.fromClass(class {
   buildDecorations(view: EditorView) {
     const widgets: Range<Decoration>[] = [];
 
-    // Default hidden mark for display: none
     const hiddenMark = Decoration.mark({
       attributes: {
         style: 'display: none;',
       },
     });
 
-    // Decoration for replacing content (used for inline code markers)
-    // This will effectively remove the characters from the visual layout.
-    const replaceMark = Decoration.replace({}); // No widget, just replaces the range with nothing
+    const replaceMark = Decoration.replace({}); // Used for inline code
 
 
     const revealSyntaxForNode = (nodeFrom: number, nodeTo: number) => {
@@ -107,12 +108,19 @@ export const markdownSyntaxHiding = ViewPlugin.fromClass(class {
                 });
                 break;
             }
+            case 'Mark': { // NEW CASE FOR HIGHLIGHT
+                // Assuming 'Mark' node and 'MarkMark' children from custom extension
+                node.getChildren('MarkMark').forEach((markNode: SyntaxNode) => {
+                    if (!revealSyntaxForNode(node.from, node.to)) {
+                        widgets.push(hiddenMark.range(markNode.from, markNode.to));
+                    }
+                });
+                break;
+            }
             case 'InlineCode': {
-                // Use replaceMark for inline code backticks
                 node.getChildren('CodeMark').forEach((markNode: SyntaxNode) => {
                     if (!revealSyntaxForNode(node.from, node.to)) {
-                        // Apply replace decoration only if NOT revealing syntax
-                        widgets.push(replaceMark.range(markNode.from, markNode.to)); // Use replaceMark
+                        widgets.push(replaceMark.range(markNode.from, markNode.to));
                     }
                 });
                 break;
@@ -140,6 +148,17 @@ export const markdownSyntaxHiding = ViewPlugin.fromClass(class {
                 });
                 break;
             }
+
+            case 'Highlight': { // Changed from 'Mark' to 'Highlight'
+              node.getChildren('HighlightMark').forEach((markNode: SyntaxNode) => { // Changed from 'MarkMark' to 'HighlightMark'
+                  if (!revealSyntaxForNode(node.from, node.to)) {
+                      widgets.push(hiddenMark.range(markNode.from, markNode.to));
+                  }
+              });
+              break;
+            }
+
+
           }
         },
       });
