@@ -1,5 +1,5 @@
 // src/App.tsx
-import React from 'react';
+
 import { useEffect, useRef } from 'react';
 import { EditorView, keymap } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
@@ -9,7 +9,7 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { GFM } from '@lezer/markdown'; // Keep GFM for strikethrough, etc.
 
 import { syntaxHighlighting, HighlightStyle } from '@codemirror/language';
-import { tags, Tag } from '@lezer/highlight';
+import { tags} from '@lezer/highlight';
 
 import { javascript } from '@codemirror/lang-javascript';
 
