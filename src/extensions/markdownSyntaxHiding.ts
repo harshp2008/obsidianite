@@ -2,16 +2,12 @@
 import { EditorView, Decoration, type DecorationSet } from '@codemirror/view';
 import { StateField, type Transaction, EditorState, Range } from '@codemirror/state';
 import { syntaxTree } from '@codemirror/language';
-import type { SyntaxNode } from '@lezer/common'; // Import SyntaxNode for type safety
+import type { SyntaxNode } from '@lezer/common';
 
 const zeroWidthReplaceDecoration = Decoration.replace({
   content: '​' // Zero-width space character (U+200B)
 });
 
-/**
- * Creates decorations for hiding Markdown syntax.
- * Syntax will be shown if the cursor is within the containing markdown structure.
- */
 function createSyntaxHidingDecorations(state: EditorState): DecorationSet {
   const decorations: Array<Range<Decoration>> = [];
   const tree = syntaxTree(state);
@@ -24,11 +20,7 @@ function createSyntaxHidingDecorations(state: EditorState): DecorationSet {
     enter: (nodeRef) => {
       const { type, from, to } = nodeRef.node;
 
-      // Identify "parent" markdown structures whose *entire* syntax should be revealed
-      // if the cursor is anywhere within them.
       let revealSyntax = false;
-      
-      // Start with the current node, then traverse up to find a relevant parent.
       let currentParent: SyntaxNode | null = nodeRef.node; 
       
       while (currentParent) {
@@ -41,42 +33,35 @@ function createSyntaxHidingDecorations(state: EditorState): DecorationSet {
           currentParent.type.name === 'ATXHeading6' ||
           currentParent.type.name === 'StrongEmphasis' ||
           currentParent.type.name === 'Emphasis' ||
-          currentParent.type.name === 'ListItem' ||
+          // currentParent.type.name === 'ListItem' || // REMOVED: ListItem no longer reveals syntax here
           currentParent.type.name === 'FencedCode'
         ) {
-          // If the cursor is anywhere within this parent's full range, reveal its syntax.
           if (cursorFrom >= currentParent.from && cursorFrom <= currentParent.to) {
             revealSyntax = true;
-            break; // Found a parent that triggers reveal, no need to go higher
+            break;
           }
         }
-        currentParent = currentParent.parent; // Move up to the parent node
+        currentParent = currentParent.parent;
       }
 
-      // If `revealSyntax` is true, we should not hide any marks within this parent.
       if (revealSyntax) {
-          return false; // Skip hiding children of this revealed parent node
+          return false;
       }
 
-      // If we reach here, it means the cursor is NOT in a relevant parent node,
-      // so we can proceed with hiding the specific marks.
       switch (type.name) {
-        case 'HeaderMark':       // e.g., '##', '###'
-          // Hide HeaderMark itself
+        case 'HeaderMark':
           for (let i = from; i < to; i++) {
             decorations.push(zeroWidthReplaceDecoration.range(i, i + 1));
           }
-          // Additionally, hide the space immediately following the HeaderMark if it exists
-          // and is within the same line, as per typical Markdown parsing.
-          // Check if 'to' is within document bounds and the character is a space.
           if (to < state.doc.length && state.doc.sliceString(to, to + 1) === ' ') {
             decorations.push(zeroWidthReplaceDecoration.range(to, to + 1));
           }
           break;
 
-        case 'EmphasisMark':     // e.g., '**', '*', '__', '_'
-        case 'BlockquoteMark':   // e.g., '>'
-        case 'FencedCodeMark':   // e.g., '```'
+        case 'EmphasisMark':
+        case 'BlockquoteMark':
+        case 'FencedCodeMark':
+        // case 'ListMark':         // REMOVED: ListMark is now handled by listBulletExtension
           for (let i = from; i < to; i++) {
             decorations.push(zeroWidthReplaceDecoration.range(i, i + 1));
           }
@@ -88,9 +73,6 @@ function createSyntaxHidingDecorations(state: EditorState): DecorationSet {
   return Decoration.set(decorations);
 }
 
-/**
- * State field to manage syntax hiding decorations.
- */
 export const markdownSyntaxHiding = StateField.define<DecorationSet>({
   create(state) {
     return createSyntaxHidingDecorations(state);

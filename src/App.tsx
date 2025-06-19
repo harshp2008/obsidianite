@@ -30,6 +30,7 @@ import { logLezerTree } from './utils/lezerInspector';
 import { markdownSyntaxHiding } from './extensions/markdownSyntaxHiding';
 
 import './App.css';
+import { listBulletExtension } from './extensions/markdownListBulletExtension';
 
 const customHighlightStyle = HighlightStyle.define([
   { tag: tags.heading1, fontSize: '2.5em', fontWeight: 'bold', color: '#e06c75' },
@@ -98,6 +99,7 @@ const x = 10;
           oneDark,
           markdownLinkTransformation,
           markdownSyntaxHiding,
+          listBulletExtension,
         ],
       });
 
