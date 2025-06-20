@@ -27,64 +27,76 @@ function selectionIntersects(
 class LinkTextWidget extends WidgetType {
   private isEmptyUrl: boolean;
   private domElement: HTMLElement | null = null; // Store the created DOM element
-  // The 'readonly' keyword in the constructor params below automatically
-  // declares and initializes these as properties of the class.
-  // private linkFrom: number; // No longer needed as separate declaration
-  // private linkTo: number;   // No longer needed as separate declaration
-  // private view: EditorView; // No longer needed as separate declaration
 
   constructor(
-    readonly text: string, // Re-added 'readonly'
-    readonly url: string,   // Re-added 'readonly'
+    readonly text: string,
+    readonly url: string,
     readonly linkFrom: number,
     readonly linkTo: number,
     readonly view: EditorView
   ) {
     super();
-    // Trim URL content here for robustness, although it should be clean from buildDecorations
     this.isEmptyUrl = url.trim().length === 0;
-    // this.linkFrom = linkFrom; // No longer needed, handled by readonly
-    // this.linkTo = linkTo;   // No longer needed, handled by readonly
-    // this.view = view;       // No longer needed, handled by readonly
   }
 
   eq(other: WidgetType): boolean {
     return other instanceof LinkTextWidget &&
-           this.text === other.text && // Now 'this.text' exists
-           this.url === other.url &&   // Now 'this.url' exists
+           this.text === other.text &&
+           this.url === other.url &&
            this.linkFrom === other.linkFrom &&
            this.linkTo === other.linkTo;
   }
 
   toDOM() {
     const anchor = document.createElement('a');
-    anchor.textContent = this.text; // Now 'this.text' exists
+    anchor.textContent = this.text;
     anchor.className = 'cm-link-display';
 
     if (!this.isEmptyUrl) {
-      anchor.href = this.url; // Now 'this.url' exists
-      anchor.target = '_blank'; // Open in new tab
-      anchor.rel = 'noopener noreferrer'; // Security best practice for target="_blank"
-      anchor.title = this.url; // Show full URL on hover // Now 'this.url' exists
+      anchor.href = this.url;
+      // We will handle opening in a new tab programmatically via a simulated click,
+      // so target="_blank" is not strictly necessary for functionality here,
+      // but it's good for semantics and accessibility (e.g., if JS fails).
+      anchor.target = '_blank'; // Keep for semantic correctness
 
       // Add a click event listener to handle both navigation and edit mode
       anchor.addEventListener('click', (e) => {
         e.preventDefault(); // PREVENT default browser navigation
 
-        // 1. Open the link (manually)
-        window.open(this.url, '_blank', 'noopener noreferrer'); // Now 'this.url' exists
+        // 1. Open the link in a new background tab using a simulated Ctrl/Cmd+Click
+        const tempAnchor = document.createElement('a');
+        tempAnchor.href = this.url;
+        tempAnchor.target = '_blank'; // Ensure it's a new tab
+
+        // Simulate Ctrl/Cmd+Click to open in background tab
+        // Use `metaKey` for macOS (Cmd), `ctrlKey` for Windows/Linux (Ctrl)
+        // Set both to ensure cross-platform compatibility. The browser will
+        // typically use the appropriate key based on the OS.
+        const event = new MouseEvent('click', {
+          view: window,
+          bubbles: true,
+          cancelable: true,
+          ctrlKey: true, // For Windows/Linux
+          metaKey: true  // For macOS
+        });
+
+        // Append to body temporarily, dispatch event, then remove
+        // This is a common pattern to trigger native browser behavior.
+        document.body.appendChild(tempAnchor);
+        tempAnchor.dispatchEvent(event);
+        document.body.removeChild(tempAnchor);
 
         // 2. Go into edit mode for the link (by setting CodeMirror selection)
-        // We dispatch a transaction to update the selection
-        this.view.dispatch({ // 'this.view' exists
-          selection: { anchor: this.linkFrom, head: this.linkTo } // 'this.linkFrom', 'this.linkTo' exist
+        // Dispatch a transaction to update the selection to the original link's range.
+        this.view.dispatch({
+          selection: { anchor: this.linkFrom, head: this.linkTo }
         });
-        // Optional: Focus the editor if it loses focus
-        this.view.focus(); // 'this.view' exists
+        // Ensure editor focuses itself after the action, if it didn't already
+        this.view.focus();
       });
 
     } else {
-      // Styling for links with no URL (e.g., `[Link Text]()`)
+      // Styling and behavior for links with no URL (e.g., `[Link Text]()`)
       anchor.classList.add('cm-link-empty-url');
       anchor.href = 'javascript:void(0);'; // Prevent actual navigation for empty links
       anchor.title = 'Link has no URL'; // Tooltip for empty links
@@ -99,15 +111,15 @@ class LinkTextWidget extends WidgetType {
   // Returning `true` means CodeMirror should *ignore* it, allowing our JS event listener to act.
   // Returning `false` means CodeMirror should *not* ignore it, and will process the event itself.
   ignoreEvent(event: Event): boolean {
-    // If it's a click or mousedown directly on our anchor element and it's a valid (non-empty) link,
-    // we want our custom event listener to handle it, so CodeMirror should ignore its own processing.
+    // We handle the click event ourselves, so CodeMirror should ignore it.
+    // We also ignore mousedown to prevent CM from initiating text selection
+    // that might interfere with our custom click handler.
     if ((event.type === 'click' || event.type === 'mousedown') &&
         this.domElement && event.target === this.domElement && !this.isEmptyUrl) {
-      return true; // CodeMirror should ignore this event
+      return true; // CodeMirror should ignore this event on our widget.
     }
-
-    // For all other events, or for empty links (where we don't have a custom click handler for navigation),
-    // let CodeMirror process them (e.g., selection, editing).
+    // For other events (like key presses, or events not on the anchor)
+    // or for empty links, let CodeMirror process them.
     return false;
   }
 }
@@ -149,17 +161,17 @@ export const markdownLinkTransformation = ViewPlugin.fromClass(class {
               
               node.cursor().iterate((childCursor) => {
                 if (childCursor.name === 'LinkMark') {
-                    // Check for the opening '[' and closing ']' of the LinkText part
+                    // Identify the 'LinkMark' nodes for the opening '[' and closing ']'
                     if (doc.sliceString(childCursor.from, childCursor.to) === '[') {
                         linkTextStart = childCursor.to; // Start of link text is AFTER '['
                     } else if (doc.sliceString(childCursor.from, childCursor.to) === ']') {
                         linkTextEnd = childCursor.from; // End of link text is BEFORE ']'
                     }
                 } else if (childCursor.name === 'URL') {
-                    // Get the raw content of the URL node.
+                    // Get the raw content of the URL node as identified by the parser.
                     urlContent = doc.sliceString(childCursor.from, childCursor.to);
                 }
-                return true;
+                return true; // Continue iterating children
               });
 
               // Extract link display text using the identified boundaries
@@ -171,27 +183,29 @@ export const markdownLinkTransformation = ViewPlugin.fromClass(class {
               if (urlContent.startsWith('(') && urlContent.endsWith(')')) {
                   urlContent = urlContent.substring(1, urlContent.length - 1);
               }
-              urlContent = urlContent.trim();
+              urlContent = urlContent.trim(); // Trim any leading/trailing whitespace
 
               // Condition for rendering the widget:
               // We consider it a valid link to transform if we successfully found the bracket boundaries.
-              // The `Link` node type itself from the parser signifies a valid link structure.
               if (linkTextStart !== -1 && linkTextEnd !== -1) {
                 builder.add(nodeFrom, nodeTo, Decoration.replace({
-                  // Pass the entire link's 'from' and 'to' positions, and the EditorView instance
+                  // Pass the display text, cleaned URL, the original markdown link's full range (nodeFrom, nodeTo),
+                  // and the EditorView instance to the widget.
                   widget: new LinkTextWidget(linkDisplayText, urlContent, nodeFrom, nodeTo, view),
-                  inclusive: true,
-                  block: false,
+                  inclusive: true, // The decoration should include its boundary
+                  block: false,    // Not a block decoration
                 }));
               }
             }
           }
-          return true;
+          return true; // Continue iterating syntax tree nodes
         }
       });
     }
-    return builder.finish();
+    return builder.finish(); // Finalize the set of decorations
   }
 }, {
+  // This property tells CodeMirror that the decorations are derived from the view's state.
+  // It ensures the plugin's `decorations` property is kept up to date.
   decorations: v => v.decorations
 });
