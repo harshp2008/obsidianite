@@ -11,7 +11,6 @@ import type { DecorationSet } from '@codemirror/view';
 
 import { syntaxTree } from '@codemirror/language';
 import { RangeSetBuilder, EditorState } from '@codemirror/state';
-import type { SyntaxNode } from '@lezer/common';
 
 // Helper to check if selection intersects with a specific range
 function selectionIntersects(
