@@ -1,5 +1,3 @@
-// src/App.tsx
-
 import { useEffect, useRef } from 'react';
 import { EditorView, keymap } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
@@ -14,7 +12,7 @@ import { tags} from '@lezer/highlight';
 import { javascript } from '@codemirror/lang-javascript';
 
 import { history, historyKeymap } from '@codemirror/commands';
-import { defaultKeymap } from '@codemirror/commands'; // Corrected import
+import { defaultKeymap } from '@codemirror/commands';
 import { highlightSelectionMatches, searchKeymap } from '@codemirror/search';
 import { lintKeymap } from '@codemirror/lint';
 
@@ -35,7 +33,7 @@ import { markdownSyntaxHiding } from './extensions/markdownSyntaxHiding';
 import { listBulletExtension } from './extensions/markdownListBulletExtension';
 
 // Import the new highlight extension
-import { markdownHighlightExtension, highlightTags } from './extensions/markdownHighlightExtension'; // NEW IMPORT
+import { markdownHighlightExtension, highlightTags } from './extensions/markdownHighlightExtension';
 
 import './App.css';
 
@@ -67,6 +65,37 @@ const customHighlightStyle = HighlightStyle.define([
   { tag: tags.quote, class: 'cm-blockquote' }
 ]);
 
+// Define your custom theme extension for selection here
+// We are choosing an opaque selection color to ensure it stands out
+// over existing colored backgrounds like highlights.
+const mySelectionTheme = EditorView.theme({
+  // Target selection background when editor is focused
+  "&.cm-focused .cm-selectionBackground": {
+    backgroundColor: "#BBDEFB", // A light, opaque blue, or even a light gray like #E0E0E0 for more neutrality
+  },
+  // Target selection background when editor is not focused
+  ".cm-selectionBackground": {
+    backgroundColor: "#BBDEFB", // Keep consistent with focused state for now
+  },
+
+  // Make all selected text dark for maximum contrast against the light selection background
+  "&.cm-focused .cm-selectionBackground span": {
+    color: "#000", // Black text on light selection background
+  },
+  // Specific overrides for highlight and inline code text colors when selected
+  "&.cm-focused .cm-selectionBackground .cm-highlight": {
+    color: "#000", // Ensure highlight text is black when selected
+  },
+  "&.cm-focused .cm-selectionBackground .cm-inline-code": {
+    color: "#000", // Ensure inline code text is black when selected
+  },
+  // To ensure cursor remains visible over selection
+  "&.cm-focused .cm-cursor": {
+    borderLeftColor: "#000", // Make cursor black when editor is focused and over selection
+  }
+});
+
+
 function App() {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -77,11 +106,11 @@ function App() {
         history(),
         keymap.of(historyKeymap),
         keymap.of(defaultKeymap),
-        highlightSelectionMatches(),
+        highlightSelectionMatches(), // Ensure this is present for proper selection match highlighting
         keymap.of(searchKeymap),
         dropCursor(),
         keymap.of(lintKeymap),
-        drawSelection(),
+        drawSelection(), // Essential for CodeMirror to draw its own selection background
         highlightActiveLine(),
         rectangularSelection(),
         crosshairCursor(),
@@ -118,11 +147,12 @@ const x = 10;
           ...basicExtensionsWithoutLineNumbers,
           markdown({
             base: markdownLanguage,
-            extensions: [GFM, markdownHighlightExtension], // ADD YOUR CUSTOM EXTENSION HERE
+            extensions: [GFM, markdownHighlightExtension], // GFM is an extension bundle providing Tables, TaskList, Strikethrough, and Autolink.
           }),
           javascript(),
           syntaxHighlighting(customHighlightStyle),
-          oneDark,
+          oneDark, // Your base theme
+          mySelectionTheme, // <--- ADD YOUR CUSTOM SELECTION THEME HERE (after oneDark to override)
           markdownLinkTransformation,
           markdownSyntaxHiding,
           listBulletExtension,

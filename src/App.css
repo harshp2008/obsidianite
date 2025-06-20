@@ -90,8 +90,9 @@
 
 /* Highlight styling */
 .App .cm-editor .cm-highlight { 
-  background-color: rgba(255, 242, 60, 0.7); 
-  color: #000; 
+  background-color: rgba(0, 255, 38, 0.15); 
+  color: hsl(219, 28%, 90%); 
+
 
 }
   
@@ -188,18 +189,4 @@
 .App .cm-editor .cm-cursor {
   border-left: 1.5px solid #528bff; /* Try without !important. If it doesn't apply, add back. */
 }
-
-/* Adjust selection background */
-.cm-selectionBackground {
-  background-color: rgba(141, 179, 255, 0.3) !important;
-  
-  position:relative;
-  z-index:-1 !important;
-
-}
-
-.cm-selectionLayer {
-  z-index: -1 !important;
-  
-} 
 
