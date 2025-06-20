@@ -6,7 +6,6 @@ import { syntaxTree } from '@codemirror/language';
 import { RangeSetBuilder } from '@codemirror/state';
 import { SyntaxNode } from '@lezer/common';
 
-// Corrected Import: HIDEABLE_MARK_NAMES comes from './markers'
 import { HIDEABLE_MARK_NAMES } from './markers';
 import { intersects, isCursorAdjacent, isCursorInNode, CONTENT_NODE_NAMES_FOR_MARKER_REVEAL } from './helpers';
 import { hideDecoration, showOnSelectDecoration } from './decorations';
@@ -27,40 +26,48 @@ function buildSyntaxHidingDecorations(view: EditorView): RangeSet<Decoration> {
       if (HIDEABLE_MARK_NAMES.has(nodeRef.name)) {
         let shouldHide = true; // Assume we should hide by default
 
-        // Condition 1: If any active selection range (non-empty or empty cursor range) intersects with the delimiter node.
-        // This handles direct selection of the delimiter itself.
+        // --- Condition 1: Direct Intersection with any selection range ---
+        // If any part of the delimiter itself is selected.
         for (const range of selection.ranges) {
           if (intersects(range, nodeRef.from, nodeRef.to)) {
             shouldHide = false;
             break; // Found an intersection, so show this marker
           }
         }
-        if (!shouldHide) { // If decided to show because it's directly selected
-            builder.add(nodeRef.from, nodeRef.to, showOnSelectDecoration);
-            return; // Skip to next node as we've decided to show it
+        if (!shouldHide) {
+          builder.add(nodeRef.from, nodeRef.to, showOnSelectDecoration);
+          return; // Skip to next node as we've decided to show it
         }
 
-        // Condition 2: If the cursor is present (empty selection) AND
-        // the cursor is adjacent to the delimiter OR
-        // the cursor is anywhere within the *parent* markdown element that this delimiter belongs to.
-        if (selection.main.empty) {
-          if (isCursorAdjacent(selection.main.head, nodeRef.from, nodeRef.to)) {
-              shouldHide = false; // Cursor is right next to the *current delimiter*
-          } else {
-              let current: SyntaxNode | null = nodeRef.node;
-              while (current) {
-                  // Check if cursor is within or at the boundaries of the *parent styled block*
-                  if (
-                      CONTENT_NODE_NAMES_FOR_MARKER_REVEAL.has(current.name) &&
-                      isCursorInNode(selection.main.head, current)
-                  ) {
-                      shouldHide = false;
-                      break; // Found parent where cursor is, so show marker
-                  }
-                  current = current.parent;
-              }
-          }
+        // --- Condition 2: Cursor (empty selection) or Selection (non-empty) within the parent styled content ---
+        // This is the crucial part to ensure markers show up when their *content* is interacted with.
+
+        // Find the parent content node that this marker belongs to
+        // Example: For `**` (StrongEmphasisMark), its parent might be `StrongEmphasis`
+        // For `==` (HighlightMark), its parent might be `Highlight`
+        let parentContentNode: SyntaxNode | null = nodeRef.node.parent;
+        while (parentContentNode && !CONTENT_NODE_NAMES_FOR_MARKER_REVEAL.has(parentContentNode.name)) {
+            parentContentNode = parentContentNode.parent;
         }
+
+        if (parentContentNode) {
+            for (const range of selection.ranges) {
+                // If the selection (empty or non-empty) is anywhere within the *content* of the parent node
+                if (intersects(range, parentContentNode.from, parentContentNode.to)) {
+                    shouldHide = false;
+                    break;
+                }
+            }
+        }
+
+        // --- Condition 3: If cursor is directly adjacent to the marker (only for empty selection) ---
+        // This is a specific case for when you just place the cursor next to the marker.
+        if (shouldHide && selection.main.empty) { // Only check if still shouldHide and selection is empty
+            if (isCursorAdjacent(selection.main.head, nodeRef.from, nodeRef.to)) {
+                shouldHide = false;
+            }
+        }
+
 
         // Based on all conditions, apply the appropriate decoration
         if (shouldHide) {
