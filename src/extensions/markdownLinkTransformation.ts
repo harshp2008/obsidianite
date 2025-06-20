@@ -1,3 +1,5 @@
+// src/extensions/markdownLinkTransformation.ts
+
 import {
   EditorView,
   ViewPlugin,
@@ -11,14 +13,26 @@ import { syntaxTree } from '@codemirror/language';
 import { RangeSetBuilder, EditorState } from '@codemirror/state';
 import type { SyntaxNode } from '@lezer/common';
 
-// Helper to check if cursor is within a specific range
-function cursorIsWithin(currentSelection: EditorState['selection']['main'], start: number, end: number): boolean {
-  return currentSelection.from >= start && currentSelection.to <= end;
+// Helper to check if selection intersects with a specific range
+function selectionIntersects(
+  currentSelection: EditorState['selection']['main'],
+  start: number,
+  end: number
+): boolean {
+  // Check if any part of the selection overlaps with the given range (start, end)
+  return currentSelection.from < end && currentSelection.to > start;
 }
 
 // Widget to render the link text (and optionally make it clickable)
 class LinkTextWidget extends WidgetType {
-  constructor(readonly text: string, readonly url: string) { super(); }
+  // Add a property to indicate if the URL is empty/invalid
+  private isEmptyUrl: boolean;
+  
+  constructor(readonly text: string, readonly url: string) {
+    super();
+    // Determine if the URL is empty or just contains whitespace
+    this.isEmptyUrl = !url || url.trim() === '()';
+  }
 
   eq(other: WidgetType): boolean {
     return other instanceof LinkTextWidget &&
@@ -28,10 +42,24 @@ class LinkTextWidget extends WidgetType {
 
   toDOM() {
     const anchor = document.createElement('a');
-    anchor.href = this.url;
     anchor.textContent = this.text;
     anchor.className = 'cm-link-display';
-    anchor.target = '_blank';
+
+    if (!this.isEmptyUrl) {
+      // Only set href and target if the URL is not empty
+      anchor.href = this.url;
+      anchor.target = '_blank';
+      anchor.title = this.url; // Show full URL on hover
+    } else {
+      // Add a class for empty/invalid URLs for specific styling
+      anchor.classList.add('cm-link-empty-url');
+      anchor.href = 'javascript:void(0);'; // Prevent actual navigation
+      anchor.title = 'Link has no URL'; // Tooltip for empty links
+    }
+
+    // Optional: Truncate long URLs in the tooltip if you were to show it within the text
+    // For a simple link text, the title attribute handles the full URL
+    
     return anchor;
   }
 
@@ -48,8 +76,10 @@ class LinkTextWidget extends WidgetType {
   }
 
   ignoreEvent(event: Event): boolean {
-    if (event.type === 'mousedown') return true;
-    return false;
+    // Allow mousedown to go through to the anchor tag itself for clicking
+    if (event.type === 'mousedown') return false;
+    // For other events (like keydown for navigation), ignore to prevent interference
+    return true;
   }
 }
 
@@ -80,43 +110,28 @@ export const markdownLinkTransformation = ViewPlugin.fromClass(class {
           const { from: nodeFrom, to: nodeTo, type } = node;
 
           if (type.name === 'Link') {
-            if (!cursorIsWithin(currentSelection, nodeFrom, nodeTo)) {
-              let urlNode: SyntaxNode | null = null;
-              let firstBracketFrom: number | null = null;
-              let firstBracketTo: number | null = null;
-              let secondBracketFrom: number | null = null;
+            // Apply transformation ONLY if the selection DOES NOT intersect the link's range
+            if (!selectionIntersects(currentSelection, nodeFrom, nodeTo)) {
+              let urlText = '';
+              let linkDisplayText = '';
 
-              // Iterate through children to find LinkMarks and the URL
-              let cursor = node.firstChild;
-              while (cursor) {
-                if (cursor.type.name === 'LinkMark') {
-                  if (firstBracketFrom === null) {
-                    firstBracketFrom = cursor.from; // This is the '['
-                    firstBracketTo = cursor.to;
-                  } else if (secondBracketFrom === null && cursor.from > (firstBracketFrom || 0)) {
-                    secondBracketFrom = cursor.from; // This is the ']'
-                  }
-                } else if (cursor.type.name === 'URL') {
-                  urlNode = cursor;
+              node.cursor().iterate((childCursor) => {
+                if (childCursor.name === 'LinkText') {
+                  // +1 and -1 to strip the brackets []
+                  linkDisplayText = doc.sliceString(childCursor.from + 1, childCursor.to - 1);
+                } else if (childCursor.name === 'URL') {
+                  // The URL node typically includes the parentheses, so we strip them
+                  urlText = doc.sliceString(childCursor.from + 1, childCursor.to - 1);
                 }
-                cursor = cursor.nextSibling;
-              }
+                return true;
+              });
 
-              // Now, derive the link text range
-              let linkTextFrom: number | null = null;
-              let linkTextTo: number | null = null;
-
-              if (firstBracketTo !== null && secondBracketFrom !== null) {
-                linkTextFrom = firstBracketTo;
-                linkTextTo = secondBracketFrom;
-              }
-
-              if (linkTextFrom !== null && linkTextTo !== null && urlNode) {
-                const linkText = doc.sliceString(linkTextFrom, linkTextTo);
-                const url = doc.sliceString(urlNode.from, urlNode.to);
-
+              // If linkDisplayText is empty, and urlText is also empty or just "()", consider it an incomplete link.
+              // We should not render a widget for just '[]()' unless specifically desired.
+              // For now, let's only create a widget if we have at least linkDisplayText.
+              if (linkDisplayText) { // Ensure there's at least some display text
                 builder.add(nodeFrom, nodeTo, Decoration.replace({
-                  widget: new LinkTextWidget(linkText, url),
+                  widget: new LinkTextWidget(linkDisplayText, urlText),
                   inclusive: true,
                   block: false,
                 }));

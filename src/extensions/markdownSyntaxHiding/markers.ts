@@ -8,8 +8,8 @@ export const HIDEABLE_MARK_NAMES = new Set([
   'CodeMark',
   'BlockquoteMark',
   'HorizontalRule',
-  //'LinkMark', // The '[' and ']' of a link
-  //'URL',      // The (url) part of a link
+  'LinkMark', // The '[' and ']' of a link
+  'URL',      // The (url) part of a link
   'HeaderMark', // <-- **ADD THIS FOR HEADERS**
 ]);
 
