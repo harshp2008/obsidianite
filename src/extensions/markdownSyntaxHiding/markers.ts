@@ -13,5 +13,6 @@ export const HIDEABLE_MARK_NAMES = new Set([
     "SetextHeadingMark",  // === --- (for setext headers)
     "StrikethroughMark",  // ~~
     "HighlightMark",      // == (for highlight, from your custom extension)
-    // Add other specific markers you might want to hide by default
+
+
   ]);
