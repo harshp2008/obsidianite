@@ -6,112 +6,200 @@ import { syntaxTree } from '@codemirror/language';
 import { RangeSetBuilder } from '@codemirror/state';
 import { SyntaxNode } from '@lezer/common';
 
-import { HIDEABLE_MARK_NAMES } from './markers';
-// Assuming 'helpers.ts' is where intersects, isCursorAdjacent, CONTENT_NODE_NAMES_FOR_MARKER_REVEAL are.
-// If you deleted helpers.ts, you might need to re-add the definitions or adapt.
-// For the purpose of this specific fix, I will use a simplified check for clarity,
-// focusing on "on line" activation for HR, but keep the structure for other types.
-// import { intersects, isCursorAdjacent, CONTENT_NODE_NAMES_FOR_MARKER_REVEAL } from './helpers';
+import { HIDEABLE_MARK_NAMES, CONTENT_NODE_NAMES_FOR_MARKER_REVEAL } from './markers';
+
+// Helper function: Checks if two ranges intersect
+function intersects(range1From: number, range1To: number, range2From: number, range2To: number): boolean {
+  return range1From < range2To && range1To > range2From;
+}
+
+// Helper function: Checks if cursor is adjacent to a marker (for empty selections/cursors)
+function isCursorAdjacent(cursorPos: number, markerFrom: number, markerTo: number): boolean {
+  return cursorPos === markerFrom || cursorPos === markerTo;
+}
 
 
-// --- IMPORTANT: Redefine the decorations here with 'display' properties ---
-// If you have a separate `decorations.ts` file, please update that file instead of defining them here.
-// For the sake of this fix, defining them inline to be explicit.
+// --- Decorations for hiding/showing ---
 const hideDecoration = Decoration.mark({
-  class: 'cm-syntax-hide', // This class will use `display: none;`
+  class: 'cm-syntax-hide',
   attributes: { 'aria-hidden': 'true' }
 });
 
 const showOnSelectDecoration = Decoration.mark({
-  class: 'cm-syntax-show', // This class will use `display: inline-block;`
+  class: 'cm-syntax-show',
   attributes: { 'aria-hidden': 'false' }
 });
-// --- END Redefine decorations ---
+
+// A special 'replace' decoration for markers (like HeaderMark) that need to hide trailing space
+const replaceDecoration = Decoration.replace({
+    inclusive: true,
+    block: false,
+});
 
 
-// This function builds the set of decorations to apply for syntax hiding.
 function buildSyntaxHidingDecorations(view: EditorView): RangeSet<Decoration> {
   const builder = new RangeSetBuilder<Decoration>();
   const tree = syntaxTree(view.state);
   const { state } = view;
   const selection = state.selection;
+  const primarySelection = selection.main;
 
-  // Helper for checking if selection is on the line of a node
-  const isSelectionOnLine = (nodeFrom: number, nodeTo: number): boolean => {
-    const line = state.doc.lineAt(nodeFrom);
-    return selection.main.from <= line.to && selection.main.to >= line.from;
+  // Helper for checking if selection is on the line of a given position
+  const isSelectionOnLine = (pos: number): boolean => {
+    const line = state.doc.lineAt(pos);
+    return primarySelection.from <= line.to && primarySelection.to >= line.from;
   };
 
   tree.iterate({
     from: 0,
     to: state.doc.length,
     enter: (nodeRef) => {
-      // Check if this node is a markdown marker that we typically hide
-      if (HIDEABLE_MARK_NAMES.has(nodeRef.name)) {
-        const markerFrom = nodeRef.from;
-        const markerTo = nodeRef.to;
+      const { node } = nodeRef; // Destructure node from nodeRef
+      const { from: nodeFrom, to: nodeTo, type } = node; // Destructure from, to, type from node
 
-        let shouldShow = false; // Assume we should hide by default
+      // Special handling for HeaderMark to include trailing space
+      if (type.name === 'HeaderMark') { // Use 'type.name' instead of 'node.type.name' for consistency
+        const markerFrom = nodeFrom; // Use the destructured nodeFrom
+        let markerTo = nodeTo; // Initialize with nodeTo, then adjust
 
-        // Logic for HorizontalRule: Show if cursor/selection is on the same line
-        if (nodeRef.name === 'HorizontalRule') {
-          shouldShow = isSelectionOnLine(markerFrom, markerTo);
+        // Find the actual content node (e.g., ATXHeading1) that follows HeaderMark
+        // and adjust 'markerTo' to extend to its beginning.
+        // This effectively hides the HeaderMark and the space before the content.
+        let nextSibling = node.nextSibling;
+        // Keep looking for the actual heading content (ATXHeadingX)
+        while (nextSibling && !nextSibling.type.name.startsWith('ATXHeading')) {
+            // If it's just whitespace or another minor token, extend the hiding range
+            if (nextSibling.type.name === 'Whitespace' || nextSibling.from === markerTo) {
+                markerTo = nextSibling.to;
+                nextSibling = nextSibling.nextSibling;
+            } else {
+                break; // Found something else, stop
+            }
+        }
+
+        // If a content node was found, or if there was just whitespace, adjust markerTo
+        if (nextSibling && nextSibling.type.name.startsWith('ATXHeading')) {
+             // The space between ### and content is usually just before ATXHeading
+             markerTo = nextSibling.from;
         } else {
-          // --- Re-integrating your original complex logic for other markdown types ---
-          // Condition 1: Direct Intersection with any selection range
-          for (const range of selection.ranges) {
-            if (range.from < markerTo && range.to > markerFrom) { // intersects function logic
-              shouldShow = true;
-              break;
+            // If no ATXHeading or specific content follows, ensure we cover any immediate whitespace.
+            // This case handles a header with just '### ' and no text.
+            const line = state.doc.lineAt(nodeFrom);
+            const lineText = state.doc.sliceString(line.from, line.to);
+            const relativeMarkerEnd = nodeTo - line.from; // Use nodeTo here
+            const spaceAfterMarker = lineText.substring(relativeMarkerEnd).match(/^\s+/);
+            if (spaceAfterMarker) {
+                markerTo = nodeTo + spaceAfterMarker[0].length;
             }
-          }
-
-          if (!shouldShow) {
-            // Condition 2: Cursor or Selection within the parent styled content
-            let parentContentNode: SyntaxNode | null = nodeRef.node.parent;
-            // You need to ensure CONTENT_NODE_NAMES_FOR_MARKER_REVEAL is imported/defined if used
-            // For example, if you imported from './helpers':
-            // while (parentContentNode && !CONTENT_NODE_NAMES_FOR_MARKER_REVEAL.has(parentContentNode.name)) {
-            //   parentContentNode = parentContentNode.parent;
-            // }
-            // If you don't have CONTENT_NODE_NAMES_FOR_MARKER_REVEAL, simplify or define it.
-            // For common cases, this might just mean checking if cursor is in the parent text.
-
-            if (parentContentNode) {
-              for (const range of selection.ranges) {
-                if (range.from <= parentContentNode.to && range.to >= parentContentNode.from) { // intersects logic
-                  shouldShow = true;
-                  break;
-                }
-              }
-            }
-          }
-
-          // Condition 3: If cursor is directly adjacent to the marker (only for empty selection)
-          // This requires `isCursorAdjacent` helper. Assuming it's available.
-          // if (!shouldShow && selection.main.empty) {
-          //   if (isCursorAdjacent(selection.main.head, markerFrom, markerTo)) {
-          //     shouldShow = true;
-          //   }
-          // }
-          // --- End original complex logic for other types ---
         }
 
 
-        // Apply the appropriate decoration based on `shouldShow`
+        let shouldShow = false;
+
+        // Logic for showing markers:
+        // 1. If the selection directly intersects the extended marker's range
+        for (const range of selection.ranges) {
+          if (intersects(range.from, range.to, markerFrom, markerTo)) {
+            shouldShow = true;
+            break;
+          }
+        }
+
+        // 2. If the cursor is on the same line as the header (better UX)
+        if (!shouldShow && isSelectionOnLine(markerFrom)) {
+            shouldShow = true;
+        }
+
+        // 3. If the cursor is within the actual heading text content
+        if (!shouldShow) {
+            let parentContentNode: SyntaxNode | null = node.parent;
+            while (parentContentNode && !CONTENT_NODE_NAMES_FOR_MARKER_REVEAL.has(parentContentNode.type.name)) {
+                parentContentNode = parentContentNode.parent;
+            }
+            if (parentContentNode) {
+                for (const range of selection.ranges) {
+                    if (intersects(range.from, range.to, parentContentNode.from, parentContentNode.to)) {
+                        shouldShow = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 4. If the selection is empty (a cursor) and it's directly adjacent to the extended marker
+        if (!shouldShow && primarySelection.empty) {
+          if (isCursorAdjacent(primarySelection.head, markerFrom, markerTo)) {
+            shouldShow = true;
+          }
+        }
+
+        if (shouldShow) {
+          // When showing, only apply to the original HeaderMark range,
+          // allowing the actual space to be rendered by CodeMirror.
+          builder.add(nodeFrom, nodeTo, showOnSelectDecoration);
+        } else {
+          // Use replaceDecoration to hide HeaderMark and the *calculated* space after it
+          builder.add(markerFrom, markerTo, replaceDecoration);
+        }
+      }
+      // General handling for other hideable marks
+      else if (HIDEABLE_MARK_NAMES.has(type.name)) { // Use 'type.name'
+        const markerFrom = nodeFrom; // Use destructured nodeFrom
+        const markerTo = nodeTo;     // Use destructured nodeTo
+
+        let shouldShow = false;
+
+        for (const range of selection.ranges) {
+          if (intersects(range.from, range.to, markerFrom, markerTo)) {
+            shouldShow = true;
+            break;
+          }
+        }
+
+        // For HorizontalRule and BlockquoteMark, show if cursor is on their line
+        if (!shouldShow && (type.name === 'HorizontalRule' || type.name === 'BlockquoteMark')) {
+          if (isSelectionOnLine(markerFrom)) {
+            shouldShow = true;
+          }
+        }
+
+        // If cursor is within a content node that reveals markers
+        if (!shouldShow) {
+            let currentParent: SyntaxNode | null = node.parent;
+            while (currentParent) {
+              if (CONTENT_NODE_NAMES_FOR_MARKER_REVEAL.has(currentParent.type.name)) {
+                for (const range of selection.ranges) {
+                  if (intersects(range.from, range.to, currentParent.from, currentParent.to)) {
+                    shouldShow = true;
+                    break;
+                  }
+                }
+                if (shouldShow) break;
+              }
+              currentParent = currentParent.parent;
+            }
+        }
+
+        // Adjacent cursor
+        if (!shouldShow && primarySelection.empty) {
+          if (isCursorAdjacent(primarySelection.head, markerFrom, markerTo)) {
+            shouldShow = true;
+          }
+        }
+
         if (shouldShow) {
           builder.add(markerFrom, markerTo, showOnSelectDecoration);
         } else {
           builder.add(markerFrom, markerTo, hideDecoration);
         }
       }
+      return true; // Continue iteration
     }
   });
 
   return builder.finish();
 }
 
-// The ViewPlugin that provides the decorations to the editor view.
 export const markdownSyntaxHiding: Extension = ViewPlugin.fromClass(class {
   decorations: RangeSet<Decoration>;
 
@@ -120,12 +208,10 @@ export const markdownSyntaxHiding: Extension = ViewPlugin.fromClass(class {
   }
 
   update(update: ViewUpdate) {
-    // Recompute decorations when the document content, selection, or viewport changes
-    if (update.docChanged || update.selectionSet || update.viewportChanged) {
+    if (update.docChanged || update.selectionSet || update.viewportChanged || update.transactions.some(tr => tr.reconfigured)) {
       this.decorations = buildSyntaxHidingDecorations(update.view);
     }
   }
 }, {
-  // This makes the decorations available to the EditorView
   decorations: v => v.decorations
 });

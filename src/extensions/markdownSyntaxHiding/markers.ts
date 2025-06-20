@@ -1,18 +1,37 @@
 // src/extensions/markdownSyntaxHiding/markers.ts
 
-// Define which types of nodes represent markdown delimiters we want to hide by default.
-// These names come from your markdown grammar (Lezer parser).
 export const HIDEABLE_MARK_NAMES = new Set([
-    "EmphasisMark",       // * _
-    "StrongEmphasisMark", // ** __
-    "ATXHeadingMark",     // # (for headers)
-    "BlockquoteMark",     // >
-    "CodeMark",           // ` `` ``` (for inline code or code blocks)
-    "LinkMark",           // [ ] ( ) (for link brackets/parentheses)
-    "URL",                // The actual URL part of a link (often hidden until active)
-    "SetextHeadingMark",  // === --- (for setext headers)
-    "StrikethroughMark",  // ~~
-    "HighlightMark",      // == (for highlight, from your custom extension)
-  "HorizontalRule"      // --- *** ___
+  'EmphasisMark',
+  'StrongMark',
+  'StrikethroughMark',
+  'HighlightMark',
+  'CodeMark',
+  'BlockquoteMark',
+  'HorizontalRule',
+  //'LinkMark', // The '[' and ']' of a link
+  //'URL',      // The (url) part of a link
+  'HeaderMark', // <-- **ADD THIS FOR HEADERS**
+]);
 
-  ]);
+// These are content nodes where, if the cursor is within them, their associated
+// markdown markers should be revealed.
+export const CONTENT_NODE_NAMES_FOR_MARKER_REVEAL = new Set([
+  'Paragraph',
+  'Blockquote',
+  'CodeBlock',
+  'InlineCode',
+  'StrongEmphasis',
+  'Emphasis',
+  'Strikethrough',
+  'Highlight',
+  'Link', // The entire Link node itself (e.g., [text](url))
+  // Add ATXHeading as a content node that should reveal its HeaderMark
+  'ATXHeading1',
+  'ATXHeading2',
+  'ATXHeading3',
+  'ATXHeading4',
+  'ATXHeading5',
+  'ATXHeading6',
+  'SetextHeading1',
+  'SetextHeading2',
+]);
