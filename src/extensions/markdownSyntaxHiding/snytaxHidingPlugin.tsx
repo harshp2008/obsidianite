@@ -7,7 +7,7 @@ import { RangeSetBuilder } from '@codemirror/state';
 import { SyntaxNode } from '@lezer/common';
 
 import { HIDEABLE_MARK_NAMES } from './markers';
-import { intersects, isCursorAdjacent, isCursorInNode, CONTENT_NODE_NAMES_FOR_MARKER_REVEAL } from './helpers';
+import { intersects, isCursorAdjacent, CONTENT_NODE_NAMES_FOR_MARKER_REVEAL } from './helpers';
 import { hideDecoration, showOnSelectDecoration } from './decorations';
 
 // This function builds the set of decorations to apply for syntax hiding.
