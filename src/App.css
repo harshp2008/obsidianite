@@ -304,3 +304,27 @@
 
 /* You might need to inspect the generated HTML to precisely target the original list mark character for styling */
 /* The Lezer parser often wraps these in span with specific classes, e.g., `cm-list-mark` or `cm-formatting-list` */
+
+/* src/App.css */
+
+.cm-horizontal-rule-widget {
+  /*display: block; /* Ensures it takes up full width */
+  border-bottom: 1.5px solid var(--cm-hr-color, #777); /* Simple line style */
+  padding: calc((22.4px / 2 - 1.5px)/2) 0; /* Add some vertical spacing */
+  height: 1.5px; /* Minimal height for the line itself */
+  background-color: transparent; /* No background color */
+  pointer-events: none; /* Make it ignore mouse events */
+
+}
+
+/* You might want to style the original HR markers when they are shown (cursor active) */
+/* CodeMirror typically assigns `cm-formatting-hr` class to them */
+.cm-formatting.cm-formatting-hr {
+  color: var(--cm-hr-marker-color, #888); /* A subtle color for the markdown markers */
+}
+
+.cm-line:has(.cm-horizontal-rule-widget) {
+  height: 22.4px;
+  max-height: 22.4px;
+}
+

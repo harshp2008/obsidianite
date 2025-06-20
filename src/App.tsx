@@ -36,6 +36,7 @@ import { listBulletExtension } from './extensions/markdownListBulletExtension';
 import { markdownHighlightExtension, highlightTags } from './extensions/markdownHighlightExtension';
 
 import './App.css';
+import { horizontalRuleExtension } from './extensions/horizontalRuleExtension';
 
 // Update customTags to include 'mark' mapped to highlightTags.highlight
 export const customTags = {
@@ -156,6 +157,7 @@ const x = 10;
           markdownLinkTransformation,
           markdownSyntaxHiding,
           listBulletExtension,
+          horizontalRuleExtension
         ],
       });
 
