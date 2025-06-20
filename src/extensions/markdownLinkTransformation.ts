@@ -11,6 +11,7 @@ import type { DecorationSet } from '@codemirror/view';
 
 import { syntaxTree } from '@codemirror/language';
 import { RangeSetBuilder, EditorState } from '@codemirror/state';
+import type { SyntaxNode } from '@lezer/common';
 
 // Helper to check if selection intersects with a specific range
 function selectionIntersects(
@@ -24,61 +25,90 @@ function selectionIntersects(
 
 // Widget to render the link text (and optionally make it clickable)
 class LinkTextWidget extends WidgetType {
-  // Add a property to indicate if the URL is empty/invalid
   private isEmptyUrl: boolean;
-  
-  constructor(readonly text: string, readonly url: string) {
+  private domElement: HTMLElement | null = null; // Store the created DOM element
+  // The 'readonly' keyword in the constructor params below automatically
+  // declares and initializes these as properties of the class.
+  // private linkFrom: number; // No longer needed as separate declaration
+  // private linkTo: number;   // No longer needed as separate declaration
+  // private view: EditorView; // No longer needed as separate declaration
+
+  constructor(
+    readonly text: string, // Re-added 'readonly'
+    readonly url: string,   // Re-added 'readonly'
+    readonly linkFrom: number,
+    readonly linkTo: number,
+    readonly view: EditorView
+  ) {
     super();
-    // Determine if the URL is empty or just contains whitespace
-    this.isEmptyUrl = !url || url.trim() === '()';
+    // Trim URL content here for robustness, although it should be clean from buildDecorations
+    this.isEmptyUrl = url.trim().length === 0;
+    // this.linkFrom = linkFrom; // No longer needed, handled by readonly
+    // this.linkTo = linkTo;   // No longer needed, handled by readonly
+    // this.view = view;       // No longer needed, handled by readonly
   }
 
   eq(other: WidgetType): boolean {
     return other instanceof LinkTextWidget &&
-           this.text === other.text &&
-           this.url === other.url;
+           this.text === other.text && // Now 'this.text' exists
+           this.url === other.url &&   // Now 'this.url' exists
+           this.linkFrom === other.linkFrom &&
+           this.linkTo === other.linkTo;
   }
 
   toDOM() {
     const anchor = document.createElement('a');
-    anchor.textContent = this.text;
+    anchor.textContent = this.text; // Now 'this.text' exists
     anchor.className = 'cm-link-display';
 
     if (!this.isEmptyUrl) {
-      // Only set href and target if the URL is not empty
-      anchor.href = this.url;
-      anchor.target = '_blank';
-      anchor.title = this.url; // Show full URL on hover
+      anchor.href = this.url; // Now 'this.url' exists
+      anchor.target = '_blank'; // Open in new tab
+      anchor.rel = 'noopener noreferrer'; // Security best practice for target="_blank"
+      anchor.title = this.url; // Show full URL on hover // Now 'this.url' exists
+
+      // Add a click event listener to handle both navigation and edit mode
+      anchor.addEventListener('click', (e) => {
+        e.preventDefault(); // PREVENT default browser navigation
+
+        // 1. Open the link (manually)
+        window.open(this.url, '_blank', 'noopener noreferrer'); // Now 'this.url' exists
+
+        // 2. Go into edit mode for the link (by setting CodeMirror selection)
+        // We dispatch a transaction to update the selection
+        this.view.dispatch({ // 'this.view' exists
+          selection: { anchor: this.linkFrom, head: this.linkTo } // 'this.linkFrom', 'this.linkTo' exist
+        });
+        // Optional: Focus the editor if it loses focus
+        this.view.focus(); // 'this.view' exists
+      });
+
     } else {
-      // Add a class for empty/invalid URLs for specific styling
+      // Styling for links with no URL (e.g., `[Link Text]()`)
       anchor.classList.add('cm-link-empty-url');
-      anchor.href = 'javascript:void(0);'; // Prevent actual navigation
+      anchor.href = 'javascript:void(0);'; // Prevent actual navigation for empty links
       anchor.title = 'Link has no URL'; // Tooltip for empty links
+      anchor.style.cursor = 'text'; // Indicate it's not clickable for navigation
     }
 
-    // Optional: Truncate long URLs in the tooltip if you were to show it within the text
-    // For a simple link text, the title attribute handles the full URL
-    
+    this.domElement = anchor; // Store a reference to the created DOM element
     return anchor;
   }
 
-  updateDOM(_dom: HTMLElement): boolean {
-    return false;
-  }
-
-  get estimatedHeight(): number {
-    return -1;
-  }
-
-  get lineBreaks(): number {
-    return 0;
-  }
-
+  // This method tells CodeMirror whether it should "ignore" an event on the widget.
+  // Returning `true` means CodeMirror should *ignore* it, allowing our JS event listener to act.
+  // Returning `false` means CodeMirror should *not* ignore it, and will process the event itself.
   ignoreEvent(event: Event): boolean {
-    // Allow mousedown to go through to the anchor tag itself for clicking
-    if (event.type === 'mousedown') return false;
-    // For other events (like keydown for navigation), ignore to prevent interference
-    return true;
+    // If it's a click or mousedown directly on our anchor element and it's a valid (non-empty) link,
+    // we want our custom event listener to handle it, so CodeMirror should ignore its own processing.
+    if ((event.type === 'click' || event.type === 'mousedown') &&
+        this.domElement && event.target === this.domElement && !this.isEmptyUrl) {
+      return true; // CodeMirror should ignore this event
+    }
+
+    // For all other events, or for empty links (where we don't have a custom click handler for navigation),
+    // let CodeMirror process them (e.g., selection, editing).
+    return false;
   }
 }
 
@@ -111,26 +141,45 @@ export const markdownLinkTransformation = ViewPlugin.fromClass(class {
           if (type.name === 'Link') {
             // Apply transformation ONLY if the selection DOES NOT intersect the link's range
             if (!selectionIntersects(currentSelection, nodeFrom, nodeTo)) {
-              let urlText = '';
+              let urlContent = '';
               let linkDisplayText = '';
 
+              let linkTextStart = -1;
+              let linkTextEnd = -1;
+              
               node.cursor().iterate((childCursor) => {
-                if (childCursor.name === 'LinkText') {
-                  // +1 and -1 to strip the brackets []
-                  linkDisplayText = doc.sliceString(childCursor.from + 1, childCursor.to - 1);
+                if (childCursor.name === 'LinkMark') {
+                    // Check for the opening '[' and closing ']' of the LinkText part
+                    if (doc.sliceString(childCursor.from, childCursor.to) === '[') {
+                        linkTextStart = childCursor.to; // Start of link text is AFTER '['
+                    } else if (doc.sliceString(childCursor.from, childCursor.to) === ']') {
+                        linkTextEnd = childCursor.from; // End of link text is BEFORE ']'
+                    }
                 } else if (childCursor.name === 'URL') {
-                  // The URL node typically includes the parentheses, so we strip them
-                  urlText = doc.sliceString(childCursor.from + 1, childCursor.to - 1);
+                    // Get the raw content of the URL node.
+                    urlContent = doc.sliceString(childCursor.from, childCursor.to);
                 }
                 return true;
               });
 
-              // If linkDisplayText is empty, and urlText is also empty or just "()", consider it an incomplete link.
-              // We should not render a widget for just '[]()' unless specifically desired.
-              // For now, let's only create a widget if we have at least linkDisplayText.
-              if (linkDisplayText) { // Ensure there's at least some display text
+              // Extract link display text using the identified boundaries
+              if (linkTextStart !== -1 && linkTextEnd !== -1 && linkTextEnd >= linkTextStart) {
+                  linkDisplayText = doc.sliceString(linkTextStart, linkTextEnd);
+              }
+
+              // Clean the URL content: strip surrounding parentheses if present, and trim whitespace
+              if (urlContent.startsWith('(') && urlContent.endsWith(')')) {
+                  urlContent = urlContent.substring(1, urlContent.length - 1);
+              }
+              urlContent = urlContent.trim();
+
+              // Condition for rendering the widget:
+              // We consider it a valid link to transform if we successfully found the bracket boundaries.
+              // The `Link` node type itself from the parser signifies a valid link structure.
+              if (linkTextStart !== -1 && linkTextEnd !== -1) {
                 builder.add(nodeFrom, nodeTo, Decoration.replace({
-                  widget: new LinkTextWidget(linkDisplayText, urlText),
+                  // Pass the entire link's 'from' and 'to' positions, and the EditorView instance
+                  widget: new LinkTextWidget(linkDisplayText, urlContent, nodeFrom, nodeTo, view),
                   inclusive: true,
                   block: false,
                 }));
