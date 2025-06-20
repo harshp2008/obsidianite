@@ -1,6 +1,6 @@
 /* src/App.css */
 
-/* General App Structure */
+/* --- General App Structure (Keep as is) --- */
 #root {
   width: 100%;
   height: calc(100vh - 40px);
@@ -54,27 +54,23 @@
   overflow: hidden;
 }
 
-/* --- CodeMirror Base Styles --- */
-/* Increased specificity for cm-editor to reduce !important */
+/* --- CodeMirror Base Styles (Keep as is) --- */
 .App .cm-editor {
   height: 100%;
-  outline: none; /* Try without !important. If outline reappears on focus, add back. */
+  outline: none;
   padding-left: 20px;
   padding-right: 20px;
 }
 
-/* Base font size and line height for the editor text */
 .App .cm-editor .cm-content {
   font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
   font-size: 1em;
   line-height: 1.4;
-  padding-top: 20px;    /* Try without !important. If not applied, add back. */
-  padding-bottom: 20px; /* Try without !important. If not applied, add back. */
+  padding-top: 20px;
+  padding-bottom: 20px;
 }
 
-
-/* --- Syntax Highlighting (from customHighlightStyle and oneDark theme) --- */
-/* Headers - Increased specificity, trying to remove !important */
+/* --- Syntax Highlighting (Keep as is unless issues arise) --- */
 .App .cm-editor .cm-header-1 { color: #e06c75; font-size: 2.2em; font-weight: bold; }
 .App .cm-editor .cm-header-2 { color: #e06c75; font-size: 1.8em; font-weight: bold; }
 .App .cm-editor .cm-header-3 { color: #e06c75; font-size: 1.5em; font-weight: bold; }
@@ -82,61 +78,38 @@
 .App .cm-editor .cm-header-5 { color: #e06c75; font-size: 1em;   font-weight: bold; }
 .App .cm-editor .cm-header-6 { color: #e06c75; font-size: 0.9em; font-weight: bold; }
 
-/* Bold */
 .App .cm-editor .cm-strong { color: #c678dd; font-weight: bold; }
-
-/* Italic */
 .App .cm-editor .cm-emphasis { color: #e5c07b; font-style: italic; }
 
-/* Highlight styling */
-.App .cm-editor .cm-highlight { 
-  background-color: rgba(0, 255, 38, 0.15); 
-  color: hsl(219, 28%, 90%); 
+.App .cm-editor .cm-highlight {
+  background-color: rgba(0, 255, 38, 0.15);
+  color: hsl(219, 28%, 90%);
 }
-  
-.cm-widgetBuffer:has(+ .cm-highlight:not(.ͼ13))  {
+.cm-widgetBuffer:has(+ .cm-highlight:not(.ͼ13)) {
   padding: 0px;
 }
-
 .cm-widgetBuffer:not(:has(+ .cm-highlight:not(.ͼ13))) {
-  padding-right: 0px 
-
+  padding-right: 0px;
 }
-
 .cm-highlight:not(.ͼ13) {
   padding-left: 2px;
   padding-right: 2px;
 }
-
-
-
-.ͼ13:has(+ .cm-highlight:not(.ͼ13))  {
+.ͼ13:has(+ .cm-highlight:not(.ͼ13)) {
   padding-left: 2px;
-
-
   border-top-left-radius: 2px;
   border-bottom-left-radius: 2px;
-  
 }
-
 .ͼ13.cm-highlight:not(:has(+ .cm-highlight:not(.ͼ13))) {
   padding-right: 2px;
-
-
   border-top-right-radius: 2px;
-  border-bottom-right-radius: 2px;  
-
+  border-bottom-right-radius: 2px;
 }
 
-
-
-/* Strikethrough styling */
 .App .cm-editor .cm-strikethrough { text-decoration: line-through; color: #888; }
 
-/* Inline Code styling */
- .cm-inline-code {
+.cm-inline-code {
   font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
-  
   background-color: rgba(126, 140, 168, 0.5);
   color: #98c379;
   padding: 0px 2px;
@@ -144,187 +117,137 @@
   line-height: 1.4;
 }
 
-
-
-
-
-/* Links */
 .App .cm-editor .cm-link { color: #61afef; text-decoration: underline; }
-
-/* URLs within links (e.g., the "https://www.google.com" part) */
 .App .cm-editor .cm-url { color: #61afef; }
-
-/* Blockquote */
 .App .cm-editor .cm-blockquote {
   border-left: 4px solid #61afef;
   padding-left: 1em;
   color: #abb2bf;
 }
-
-/* Target the editor environment and your custom highlight mark class */
 .App .cm-editor .cmt-HighlightMark {
   color: rgba(128, 128, 128, 0.6);
   font-size: 0.9em;
 }
 
-/* --- Specific Hiding/Display Adjustments for Syntax --- */
-.cm-editor .cm-link-display {
-  display: inline-block;
-  white-space: pre-wrap;
-}
-
 /* General CodeMirror adjustments for better appearance with oneDark */
-.cm-scroller {
-  overflow-x: hidden;
-}
-
-.cm-content, .cm-line {
-  word-wrap: break-word;
-  white-space: pre-wrap;
-}
-
-/* Adjustments for the cursor */
-.App .cm-editor .cm-cursor {
-  border-left: 1.5px solid #528bff; /* Try without !important. If it doesn't apply, add back. */
-}
+.cm-scroller { overflow-x: hidden; }
+.cm-content, .cm-line { word-wrap: break-word; white-space: pre-wrap; }
+.App .cm-editor .cm-cursor { border-left: 1.5px solid #528bff; }
 
 
-/* Styles for hiding markdown markers by default */
-.cm-hide-markdown-marker {
-  /* Make characters completely transparent but keep them in the DOM */
-  opacity: 0;
-  /* Shift them slightly out of flow to prevent influencing line height,
-     but keep them associated with the line.
-     A small negative margin can also help pull them in without collapsing the line completely.
-  */
-  position: absolute; /* This takes them out of the normal flow */
-  /* Adjust left/right based on how your markers are structured.
-     Often, if they are at the start/end of a line, these will be 0.
-     You might need to fine-tune `left` or `right` if markers are inline.
-  */
-  left: 0;
-  right: 0;
-  /* Prevent interaction with hidden markers */
-  pointer-events: none;
-  /* Ensure no width is taken up in the normal flow if not using position: absolute */
-  /* If using position: absolute, width/height for layout are less critical for line spacing */
-  width: 0;
-  height: 0;
-  overflow: hidden; /* Hide any stray pixels */
-  line-height: 0; /* Important: this needs to be 0 or small for hidden elements */
-  vertical-align: top; /* Prevents hidden elements from extending below the line */
-}
+/* --- Horizontal Rule Specific Styles --- */
 
-/* Styles to show markdown markers when selected */
-/* This class MUST override the hiding properties of .cm-hide-markdown-marker */
-.cm-show-markdown-marker-on-select {
-  opacity: 1 !important; /* Restore full opacity */
-  pointer-events: auto !important; /* Make them interactive/selectable again */
-  position: static !important; /* Restore to normal flow */
-  width: auto !important; /* Restore width */
-  height: auto !important; /* Restore height */
-  overflow: visible !important; /* Restore overflow */
-  line-height: inherit !important; /* Restore normal line height */
-  vertical-align: baseline !important; /* Restore baseline alignment */
-  /* Text color when selected (should contrast with your selection background) */
-  color: var(--cm-selection-text-color, #000) !important;
-  /* Ensure no background is applied to the marker itself by this class */
-  background-color: transparent !important;
-}
-
-/* Ensure your selection background styles are still effective.
-   They should be defined in your App.tsx theme and not directly in App.css for best practice.
-   Example from previous turn (if you kept it):
-*/
-/*
-&.cm-focused .cm-selectionBackground {
-  background-color: #BBDEFB;
-}
-.cm-selectionBackground {
-  background-color: #BBDEFB;
-}
-&.cm-focused .cm-selectionBackground span {
-  color: #000;
-}
-*/
-
-.cm-custom-list-bullet {
-  color: #888; /* A subtle grey for the custom bullet */
-  font-weight: bold;
-  margin-right: 0.2em; /* Small space after the bullet */
-}
-
-/* You might need to ensure the original list mark's color is correct when active */
-/* This depends on your syntax highlighting theme, but usually it's `cm-formatting-list` */
-.cm-formatting.cm-formatting-list {
-  color: #c9c9c9; /* Example: A lighter color for active list marks */
-}
-
-/* src/App.css */
-
-/* Styles for the custom bullet when inactive */
-.cm-custom-list-bullet {
-  color: var(--cm-list-bullet-inactive-color, #666); /* Example: a softer grey */
-  font-weight: normal;
-  margin-right: 0.2em; /* Ensure proper spacing */
-  /* You might need to adjust line-height if it causes vertical alignment issues */
-  vertical-align: middle;
-}
-
-/* Class to hide the original markdown list mark when inactive */
-.cm-list-mark-hidden {
-  display: none; /* Or opacity: 0; position: absolute; width: 0; etc. for best spacing control */
-  /* Using display: none is often the cleanest for removing it from flow. */
-  /* If display:none causes layout issues, try: */
-  /* opacity: 0; */
-  /* pointer-events: none; */
-  /* width: 0; */
-  /* overflow: hidden; */
-  /* line-height: 0; */
-  /* vertical-align: top; */
-  /* This might also be combined with position: absolute if needed, but display:none is simpler if it works. */
-}
-
-/* Class to ensure the original markdown list mark is shown when active. */
-/* This is often just default styling, but define if you need to override something. */
-.cm-list-mark-shown {
-  /* Ensure it's visible, e.g., if a broader rule hides all marks */
-  display: inline; /* Or opacity: 1; position: static; etc. */
-  color: var(--cm-list-mark-active-color, #c9c9c9); /* Example: match your syntax highlighting color */
-  font-weight: normal; /* Or bold if you prefer */
-}
-
-/* Ensure the default CodeMirror list formatting has consistent spacing */
-/* This targets the original list mark element */
-.cm-formatting.cm-formatting-list {
-  /* Ensure no weird default padding/margin that causes double bullets */
-  padding: 0;
-  margin: 0;
-}
-
-/* You might need to inspect the generated HTML to precisely target the original list mark character for styling */
-/* The Lezer parser often wraps these in span with specific classes, e.g., `cm-list-mark` or `cm-formatting-list` */
-
-/* src/App.css */
-
+/* Base style for the visual HR widget */
 .cm-horizontal-rule-widget {
-  /*display: block; /* Ensures it takes up full width */
+  display: block; /* Ensures it takes up full width when visible */
   border-bottom: 1.5px solid var(--cm-hr-color, #777); /* Simple line style */
-  padding: calc((22.4px / 2 - 1.5px)/2) 0; /* Add some vertical spacing */
+  /* padding: calc((22.4px / 2 - 1.5px)/2) 0;  */ /* Adjust padding if needed, often handled by line-height */
   height: 1.5px; /* Minimal height for the line itself */
-  background-color: transparent; /* No background color */
-  pointer-events: none; /* Make it ignore mouse events */
-
+  background-color: transparent;
+  pointer-events: none; /* Ignore mouse events */
+  margin: 1em 0; /* Add vertical spacing around the HR */
 }
 
-/* You might want to style the original HR markers when they are shown (cursor active) */
-/* CodeMirror typically assigns `cm-formatting-hr` class to them */
-.cm-formatting.cm-formatting-hr {
-  color: var(--cm-hr-marker-color, #888); /* A subtle color for the markdown markers */
+/* This class will be applied to the HR widget when the original markdown text should be visible */
+.cm-horizontal-rule-widget-hidden {
+  display: none; /* Crucially hides the HR widget completely */
 }
 
+/* Adjust line height for lines containing an HR widget to control vertical spacing */
+/* This is a specific adjustment you had, keep if it's working for your layout */
 .cm-line:has(.cm-horizontal-rule-widget) {
-  height: 22.4px;
+  height: 22.4px; /* Ensure this line height matches your desired line height */
   max-height: 22.4px;
 }
 
+
+/* --- Horizontal Rule Specific Styles --- */
+
+/* Base style for the visual HR widget */
+.cm-horizontal-rule-widget {
+  display: block; /* Ensures it takes up full width when visible */
+  border-bottom: 1.5px solid var(--cm-hr-color, #777); /* Simple line style */
+  /* Remove padding from here if your line-height adjustment below handles vertical spacing */
+  /* padding: calc((22.4px / 2 - 1.5px)/2) 0; */
+  height: 1.5px; /* Minimal height for the line itself */
+  background-color: transparent;
+  pointer-events: none; /* Ignore mouse events */
+  margin: 1em 0; /* Add vertical spacing around the HR for proper line separation */
+}
+
+/* This class will be applied to the HR widget when the original markdown text should be visible */
+.cm-horizontal-rule-widget-hidden {
+  display: none !important; /* CRITICAL: Hides the HR widget completely, taking it out of flow */
+}
+
+/* Adjust line height for lines containing an HR widget to control vertical spacing */
+/* This is a specific adjustment you had, keep if it's working for your layout */
+.cm-line:has(.cm-horizontal-rule-widget) {
+  height: 22.4px; /* Ensure this line height matches your desired line height */
+  max-height: 22.4px;
+}
+
+
+/* --- Syntax Hiding/Showing Classes (CRITICAL CHANGES HERE) --- */
+
+/* This class hides the original markdown text (e.g., '---', '##', '**') */
+/* It's applied by markdownSyntaxHiding when the marker is NOT active */
+.cm-syntax-hide {
+  display: none !important; /* Forces complete hiding, taking it out of document flow */
+  /* IMPORTANT: Remove any conflicting `opacity`, `position`, `width`, `height`, `overflow` rules here */
+}
+
+/* This class shows the original markdown text when the marker IS active */
+/* It's applied by markdownSyntaxHiding when the cursor/selection is on the line */
+.cm-syntax-show {
+  display: inline-block !important; /* Forces visibility and ensures it takes up space in line */
+  /* Restore default text color (your editor's main text color) */
+  color: var(--editor-text-color, #c9c9c9) !important;
+  /* IMPORTANT: Remove any conflicting `opacity`, `position`, `width`, `height`, `overflow` rules here */
+  background-color: transparent !important; /* Ensure no unwanted background */
+}
+
+/* Specific styling for HorizontalRule markdown characters when visible (e.g., the '---' text) */
+/* This will combine with .cm-syntax-show */
+.cm-formatting.cm-formatting-hr {
+  /* Ensure its color is consistent with your main text color */
+  color: var(--editor-text-color, #c9c9c9); /* Should now be visible and light */
+  /* Add any other specific styles for the '---' text when shown */
+}
+
+
+/* --- List Bullet Specific Styles (Adjusted for consistency with new hiding logic) --- */
+
+/* Styles for the custom bullet '•' when inactive */
+.cm-custom-list-bullet {
+  color: var(--cm-list-bullet-inactive-color, #666);
+  font-weight: normal;
+  margin-right: 0.5ch;
+  vertical-align: middle;
+}
+
+/* Styles for the original list mark characters (e.g., '-', '+', '*') when active */
+/* This will also be affected by the .cm-syntax-show class from markdownSyntaxHiding */
+.cm-formatting.cm-formatting-list {
+  color: var(--editor-text-color, #c9c9c9); /* Ensures original bullet text color is white/light */
+  padding: 0;
+  margin: 0;
+  display: inline-block; /* Essential to ensure it takes space when shown */
+  width: 1ch; /* Gives consistent width for a single character bullet */
+  text-align: center;
+}
+
+/* Define your editor's main colors as CSS variables for easier management */
+:root {
+  --editor-text-color: #c9c9c9; /* Your main editor text color (e.g., from your screenshots) */
+  --cm-hr-color: #555; /* Color for the horizontal rule line */
+  --cm-list-bullet-inactive-color: #666; /* Color for the inactive list bullet */
+  /* Add other colors as needed, e.g., --cm-selection-background-color */
+}
+
+/* General CodeMirror editor styles */
+.cm-editor {
+  background-color: #282c34; /* Your editor background */
+  color: var(--editor-text-color);
+  font-family: monospace;
+}

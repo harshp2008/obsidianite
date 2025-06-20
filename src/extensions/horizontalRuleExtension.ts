@@ -1,16 +1,34 @@
 // src/extensions/horizontalRuleExtension.ts
 import { EditorView, Decoration, WidgetType, type DecorationSet } from '@codemirror/view';
-import { StateField, type EditorState, Range, SelectionRange } from '@codemirror/state';
+import { StateField, type EditorState, Range } from '@codemirror/state';
 import { syntaxTree } from '@codemirror/language';
-import { SyntaxNode } from '@lezer/common';
+import { SyntaxNode } from '@lezer/common'; // Explicitly import SyntaxNode
 
 // Define a custom WidgetType for the horizontal line visual
 class HorizontalRuleWidget extends WidgetType {
+  // IMPORTANT: Declare the property explicitly before the constructor.
+  // This makes it a standard instance property, not just a constructor parameter property.
+  isHidden: boolean;
+
+  constructor(isHidden: boolean) { // Receive the value
+    super();
+    this.isHidden = isHidden; // Assign the value to the instance property
+  }
+
+  // CodeMirror uses `eq` to determine if a widget needs to be re-rendered.
+  // If this method returns true, the existing DOM element is reused.
+  eq(other: HorizontalRuleWidget) {
+    return this.isHidden === other.isHidden; // Compare based on the state we control
+  }
+
   toDOM() {
     const hr = document.createElement('div');
-    hr.className = 'cm-horizontal-rule-widget'; // Class for styling
-    // Optionally, you can add a visible <hr> tag inside the div for semantic HTML
-    // hr.appendChild(document.createElement('hr'));
+    hr.className = 'cm-horizontal-rule-widget'; // Base class for styling
+    if (this.isHidden) {
+      // Add a class that hides the widget when the markdown text should be visible
+      hr.classList.add('cm-horizontal-rule-widget-hidden');
+    }
+    hr.setAttribute('aria-hidden', this.isHidden.toString()); // Accessibility hint
     return hr;
   }
 
@@ -27,36 +45,28 @@ function createHorizontalRuleDecorations(state: EditorState): DecorationSet {
     from: 0,
     to: state.doc.length,
     enter: (nodeRef) => {
-      const { node, from, to } = nodeRef;
+      const { node } = nodeRef; // Use node.from, node.to directly
 
       // Check if the current node is a HorizontalRule
       if (node.type.name === 'HorizontalRule') {
         const ruleFrom = node.from;
         const ruleTo = node.to;
 
-        // Determine if the cursor/selection is on the line of the horizontal rule
-        // or directly adjacent to its markers.
-        // We'll rely on markdownSyntaxHiding for the actual hiding/showing
-        // based on cursor proximity, so here we just need to know if the HR is active.
-        let isCursorActiveOnRuleLine = false;
+        // Determine if the cursor/selection is on the line of the horizontal rule.
+        // If it is, the widget should be hidden, and markdownSyntaxHiding will show the text.
         const line = state.doc.lineAt(ruleFrom);
+        // This condition checks if any part of the selection range is within the line bounds
+        const isCursorActiveOnRuleLine = primarySelection.from <= line.to && primarySelection.to >= line.from;
 
-        if (primarySelection.from >= line.from && primarySelection.to <= line.to) {
-            isCursorActiveOnRuleLine = true;
-        }
-
-        if (!isCursorActiveOnRuleLine) {
-          // If the cursor is NOT on the line, insert the visual HR widget.
-          // This widget will appear where markdownSyntaxHiding would have hidden the markers.
-          decorations.push(
-            Decoration.widget({
-              widget: new HorizontalRuleWidget(),
-              side: 0, // Place widget at the start of the rule's range
-            }).range(ruleFrom)
-          );
-        }
-        // If the cursor IS on the line, we do nothing here,
-        // letting markdownSyntaxHiding reveal the actual '---' characters.
+        // Always insert the widget. Its visibility will be controlled by the 'isHidden' property
+        // passed to its constructor, which adds/removes a CSS class.
+        decorations.push(
+          Decoration.widget({
+            // Pass true if the cursor is active on the line, meaning the widget should be hidden.
+            widget: new HorizontalRuleWidget(isCursorActiveOnRuleLine),
+            side: 0, // Place widget at the start of the rule's range
+          }).range(ruleFrom)
+        );
       }
     }
   });
@@ -70,10 +80,12 @@ export const horizontalRuleExtension = StateField.define<DecorationSet>({
   },
   update(decorations, transaction) {
     // Recompute decorations if document content or selection changes
+    // This will cause new widget instances to be created if `isHidden` changes,
+    // and CodeMirror's `eq` method will handle DOM updates.
     if (transaction.docChanged || transaction.selection) {
       return createHorizontalRuleDecorations(transaction.state);
     }
     return decorations;
   },
   provide: (field) => EditorView.decorations.from(field),
-}); 
+});
