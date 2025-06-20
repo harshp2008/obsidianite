@@ -92,8 +92,6 @@
 .App .cm-editor .cm-highlight { 
   background-color: rgba(0, 255, 38, 0.15); 
   color: hsl(219, 28%, 90%); 
-
-
 }
   
 .cm-widgetBuffer:has(+ .cm-highlight:not(.ͼ13))  {
@@ -190,3 +188,62 @@
   border-left: 1.5px solid #528bff; /* Try without !important. If it doesn't apply, add back. */
 }
 
+
+/* Styles for hiding markdown markers by default */
+.cm-hide-markdown-marker {
+  /* Make characters completely transparent but keep them in the DOM */
+  opacity: 0;
+  /* Shift them slightly out of flow to prevent influencing line height,
+     but keep them associated with the line.
+     A small negative margin can also help pull them in without collapsing the line completely.
+  */
+  position: absolute; /* This takes them out of the normal flow */
+  /* Adjust left/right based on how your markers are structured.
+     Often, if they are at the start/end of a line, these will be 0.
+     You might need to fine-tune `left` or `right` if markers are inline.
+  */
+  left: 0;
+  right: 0;
+  /* Prevent interaction with hidden markers */
+  pointer-events: none;
+  /* Ensure no width is taken up in the normal flow if not using position: absolute */
+  /* If using position: absolute, width/height for layout are less critical for line spacing */
+  width: 0;
+  height: 0;
+  overflow: hidden; /* Hide any stray pixels */
+  line-height: 0; /* Important: this needs to be 0 or small for hidden elements */
+  vertical-align: top; /* Prevents hidden elements from extending below the line */
+}
+
+/* Styles to show markdown markers when selected */
+/* This class MUST override the hiding properties of .cm-hide-markdown-marker */
+.cm-show-markdown-marker-on-select {
+  opacity: 1 !important; /* Restore full opacity */
+  pointer-events: auto !important; /* Make them interactive/selectable again */
+  position: static !important; /* Restore to normal flow */
+  width: auto !important; /* Restore width */
+  height: auto !important; /* Restore height */
+  overflow: visible !important; /* Restore overflow */
+  line-height: inherit !important; /* Restore normal line height */
+  vertical-align: baseline !important; /* Restore baseline alignment */
+  /* Text color when selected (should contrast with your selection background) */
+  color: var(--cm-selection-text-color, #000) !important;
+  /* Ensure no background is applied to the marker itself by this class */
+  background-color: transparent !important;
+}
+
+/* Ensure your selection background styles are still effective.
+   They should be defined in your App.tsx theme and not directly in App.css for best practice.
+   Example from previous turn (if you kept it):
+*/
+/*
+&.cm-focused .cm-selectionBackground {
+  background-color: #BBDEFB;
+}
+.cm-selectionBackground {
+  background-color: #BBDEFB;
+}
+&.cm-focused .cm-selectionBackground span {
+  color: #000;
+}
+*/

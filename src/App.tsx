@@ -29,7 +29,7 @@ import { oneDark } from '@codemirror/theme-one-dark';
 
 import { markdownLinkTransformation } from './extensions/markdownLinkTransformation';
 import { logLezerTree } from './utils/lezerInspector';
-import { markdownSyntaxHiding } from './extensions/markdownSyntaxHiding';
+import { markdownSyntaxHiding } from './extensions/markdownSyntaxHiding/snytaxHidingPlugin';
 import { listBulletExtension } from './extensions/markdownListBulletExtension';
 
 // Import the new highlight extension
