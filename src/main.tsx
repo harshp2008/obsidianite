@@ -5,6 +5,6 @@ import EditorCore from './components/EditorCore/EditorCore.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-     <EditorCore  />
+     <EditorCore debugMode />
   </StrictMode>,
 )

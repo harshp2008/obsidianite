@@ -1,0 +1,172 @@
+// src/extensions/markdownLinkTransformation.ts
+
+import {
+  EditorView,
+  ViewPlugin,
+  ViewUpdate,
+  Decoration,
+  WidgetType,
+  DecorationSet
+} from '@codemirror/view';
+
+import { EditorState } from '@codemirror/state';
+import { syntaxTree } from '@codemirror/language';
+import { RangeSetBuilder } from '@codemirror/state';
+import { SyntaxNode } from '@lezer/common';
+
+import { shouldShowRawMarkdown } from './linkVisibilityLogic';
+
+
+class LinkTextWidget extends WidgetType {
+  private isEmptyUrl: boolean;
+  private domElement: HTMLElement | null = null; 
+
+  constructor(
+    readonly text: string,
+    readonly url: string,
+    readonly linkFrom: number,
+    readonly linkTo: number,
+    readonly view: EditorView
+  ) {
+    super();
+    this.isEmptyUrl = url.trim().length === 0;
+  }
+
+  eq(other: WidgetType): boolean {
+    return other instanceof LinkTextWidget &&
+           this.text === other.text &&
+           this.url === other.url &&
+           this.linkFrom === other.linkFrom &&
+           this.linkTo === other.linkTo;
+  }
+
+  toDOM() {
+    const anchor = document.createElement('a');
+    anchor.textContent = this.text;
+    anchor.className = 'cm-link-display';
+
+    if (this.url.trim().length > 0) {
+      anchor.href = this.url;
+      anchor.target = '_blank';
+
+      anchor.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        const tempAnchor = document.createElement('a');
+        tempAnchor.href = this.url;
+        tempAnchor.target = '_blank';
+
+        const event = new MouseEvent('click', {
+          view: window,
+          bubbles: true,
+          cancelable: true,
+          ctrlKey: true,
+          metaKey: true
+        });
+
+        document.body.appendChild(tempAnchor);
+        tempAnchor.dispatchEvent(event);
+        document.body.removeChild(tempAnchor);
+
+        this.view.dispatch({
+          selection: { anchor: this.linkFrom, head: this.linkTo }
+        });
+        this.view.focus();
+      });
+
+    } else {
+      anchor.classList.add('cm-link-empty-url');
+      anchor.href = 'javascript:void(0);';
+      anchor.title = 'Link has no URL';
+      anchor.style.cursor = 'text';
+    }
+
+    this.domElement = anchor;
+    return anchor;
+  }
+
+  ignoreEvent(event: Event): boolean {
+    if ((event.type === 'click' || event.type === 'mousedown') &&
+        this.domElement && event.target === this.domElement && !this.isEmptyUrl) {
+      return true;
+    }
+    return false;
+  }
+}
+
+
+export const markdownLinkTransformation = ViewPlugin.fromClass(class {
+  decorations: DecorationSet;
+
+  constructor(view: EditorView) {
+    this.decorations = this.buildDecorations(view);
+  }
+
+  update(update: ViewUpdate) {
+    if (update.docChanged || update.selectionSet || update.viewportChanged || update.heightChanged) {
+      this.decorations = this.buildDecorations(update.view);
+    }
+  }
+
+  private buildDecorations(view: EditorView): DecorationSet {
+    const builder = new RangeSetBuilder<Decoration>();
+    const tree = syntaxTree(view.state);
+    const doc = view.state.doc;
+    
+    for (let { from, to } of view.visibleRanges) {
+      tree.iterate({
+        from, to,
+        enter: (nodeRef) => {
+          const node = nodeRef.node;
+          const { from: nodeFrom, to: nodeTo, type } = node;
+
+          if (type.name === 'Link') {
+            const shouldBeRaw = shouldShowRawMarkdown(view, node); // This will return false
+
+            if (shouldBeRaw) {
+                // This block should NOT be hit with current shouldShowRawMarkdown.
+                return true; // Skip decoration, show raw markdown
+            }
+
+            // This block *should* always be hit for Link nodes.
+            let linkDisplayText = '';
+            let urlContent = '';
+
+            let linkTextNode = node.getChild('LinkText');
+            if (linkTextNode) {
+                linkDisplayText = doc.sliceString(linkTextNode.from, linkTextNode.to).trim();
+            }
+
+            let urlNode = node.getChild('URL');
+            if (urlNode) {
+                urlContent = doc.sliceString(urlNode.from, urlNode.to);
+                if (urlContent.startsWith('(') && urlContent.endsWith(')')) {
+                    urlContent = urlContent.substring(1, urlContent.length - 1).trim();
+                } else {
+                    urlContent = urlContent.trim();
+                }
+            }
+            
+            // Fallback for empty links, so they still display something visually
+            if (linkDisplayText.length === 0 && urlContent.length > 0) {
+                linkDisplayText = urlContent;
+            } else if (linkDisplayText.length === 0 && urlContent.length === 0) {
+                linkDisplayText = 'Empty Link';
+            }
+
+
+            builder.add(nodeFrom, nodeTo, Decoration.replace({
+                widget: new LinkTextWidget(linkDisplayText, urlContent, nodeFrom, nodeTo, view),
+                inclusive: true,
+                block: false,
+            }));
+          }
+          return true;
+        }
+      });
+    }
+    return builder.finish();
+  }
+}, {
+  decorations: v => v.decorations
+});

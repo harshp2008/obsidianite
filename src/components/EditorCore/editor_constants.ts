@@ -22,36 +22,14 @@ import {
 import { oneDark } from '@codemirror/theme-one-dark';
 
 // Custom extensions
-import { markdownLinkTransformation } from '../../extensions/markdownLinkTransformation';
+import { markdownLinkTransformation } from '../../extensions/Web Links/markdownLinkTransformation';
 import { markdownSyntaxHiding } from '../../extensions/markdownSyntaxHiding/snytaxHidingPlugin';
 import { listBulletExtension } from '../../extensions/markdownListBulletExtension';
 import { markdownHighlightExtension, highlightTags } from '../../extensions/markdownHighlightExtension';
 import { horizontalRuleExtension } from '../../extensions/horizontalRuleExtension';
 
 // Initial content for the editor
-export const initialContent = `## My Markdown Doc
-
-This is some **bold** text and *italic* text.
-
-==highlight==
-~~strikethrough~~
-\`inline code\`
-
-### A Subheading
-
-\`\`\`javascript
-console.log("Hello from a JS code block!");
-const x = 10;
-\`\`\`
-
-1. Ordered item 1
-2. Ordered item 2
-
-- List item 1
-- List item 2
-
-> A blockquote
-
+export const initialContent = `
 [Link to Google](https://www.google.com)
 `;
 

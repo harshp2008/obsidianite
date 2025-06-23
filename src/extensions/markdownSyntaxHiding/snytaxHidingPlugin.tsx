@@ -57,40 +57,32 @@ function buildSyntaxHidingDecorations(view: EditorView): RangeSet<Decoration> {
       const { node } = nodeRef;
       const { from: nodeFrom, to: nodeTo, type } = node;
 
-      // Check if this node is a direct syntax marker related to a Link (e.g., LinkMark, Paren)
-      // and if its parent is a Link node.
-      const isLinkSyntaxMark = (node.parent?.type.name === 'Link' || node.parent?.parent?.type.name === 'Link') &&
-                                (type.name === 'LinkMark' || type.name === 'Paren');
+      // NEW LOGIC: Explicitly handle incomplete link markers to ensure they are always visible
+      // if the cursor is near, overriding any potential hiding by other decorations.
+      if (type.name === 'SquareBracketOpen' || type.name === 'SquareBracketClose' || type.name === 'Paren') {
+          let forceShowMarker = false;
 
-      let shouldHideLinkSyntax = false;
-      if (isLinkSyntaxMark) {
-          let parentLinkNode: SyntaxNode | null = null;
-          let currentParent: SyntaxNode | null = node.parent;
-
-          while (currentParent) {
-              if (currentParent.type.name === 'Link') {
-                  parentLinkNode = currentParent;
+          // Check if the cursor is anywhere within or immediately adjacent to this bracket/paren
+          if (primarySelection.empty) {
+              // Cursor immediately before/after or inside the marker
+              if (primarySelection.head >= nodeFrom && primarySelection.head <= nodeTo) {
+                  forceShowMarker = true;
+              }
+          }
+          // If any part of the selection overlaps this marker, show it
+          for (const range of selection.ranges) {
+              if (intersects(range.from, range.to, nodeFrom, nodeTo)) {
+                  forceShowMarker = true;
                   break;
               }
-              currentParent = currentParent.parent;
           }
 
-          if (parentLinkNode) {
-              // Check if the parent Link node intersects with the selection.
-              // If it DOES NOT intersect, then it should be hidden (as markdownLinkTransformation
-              // is expected to replace it).
-              let linkSelected = false;
-              for (const range of selection.ranges) {
-                  if (intersects(range.from, range.to, parentLinkNode.from, parentLinkNode.to)) {
-                      linkSelected = true;
-                      break;
-                  }
-              }
-              // If the link is NOT selected, then we should apply hiding to its syntax marks.
-              shouldHideLinkSyntax = !linkSelected;
+          if (forceShowMarker) {
+              // Add a decoration that explicitly ensures visibility for these specific markers
+              builder.add(nodeFrom, nodeTo, showOnSelectDecoration);
+              return true; // Continue iteration, but ensure this is shown
           }
       }
-
 
       // Special handling for HeaderMark to include trailing space
       if (type.name === 'HeaderMark') {
@@ -108,7 +100,7 @@ function buildSyntaxHidingDecorations(view: EditorView): RangeSet<Decoration> {
         }
 
         if (nextSibling && nextSibling.type.name.startsWith('ATXHeading')) {
-             markerTo = nextSibling.from;
+               markerTo = nextSibling.from;
         } else {
             const line = state.doc.lineAt(nodeFrom);
             const lineText = state.doc.sliceString(line.from, line.to);
@@ -158,54 +150,48 @@ function buildSyntaxHidingDecorations(view: EditorView): RangeSet<Decoration> {
           builder.add(markerFrom, markerTo, replaceDecoration);
         }
       }
-      // General handling for other hideable marks AND newly added link syntax marks
-      else if (HIDEABLE_MARK_NAMES.has(type.name) || isLinkSyntaxMark) { // Check if it's generally hideable OR a link syntax mark
+      // General handling for other hideable marks (Link-specific logic REMOVED from here)
+      else if (HIDEABLE_MARK_NAMES.has(type.name)) { // This condition no longer checks for isLinkSyntaxMark
         const markerFrom = nodeFrom;
         const markerTo = nodeTo;
 
         let shouldShow = false;
 
-        // If it's a link syntax mark, its 'shouldShow' is determined by `shouldHideLinkSyntax`
-        // which flips the logic: if shouldHideLinkSyntax is true (link not selected), then shouldShow is false.
-        if (isLinkSyntaxMark) {
-            shouldShow = !shouldHideLinkSyntax; // If shouldHideLinkSyntax is true, then shouldShow is false (hide it)
-        } else { // Regular hiding logic for other hideable marks
-            for (const range of selection.ranges) {
+        // Regular hiding logic for other hideable marks
+        for (const range of selection.ranges) {
             if (intersects(range.from, range.to, markerFrom, markerTo)) {
                 shouldShow = true;
                 break;
             }
-            }
+        }
 
-            if (!shouldShow && (type.name === 'HorizontalRule' || type.name === 'BlockquoteMark')) {
+        if (!shouldShow && (type.name === 'HorizontalRule' || type.name === 'BlockquoteMark')) {
             if (isSelectionOnLine(markerFrom)) {
                 shouldShow = true;
             }
-            }
+        }
 
-            if (!shouldShow) {
-                let currentParent: SyntaxNode | null = node.parent;
-                while (currentParent) {
-                if (CONTENT_NODE_NAMES_FOR_MARKER_REVEAL.has(currentParent.type.name)) {
-                    for (const range of selection.ranges) {
+        if (!shouldShow) {
+            let currentParent: SyntaxNode | null = node.parent;
+            while (currentParent) {
+            if (CONTENT_NODE_NAMES_FOR_MARKER_REVEAL.has(currentParent.type.name)) {
+                for (const range of selection.ranges) {
                     if (intersects(range.from, range.to, currentParent.from, currentParent.to)) {
                         shouldShow = true;
                         break;
                     }
-                    }
-                    if (shouldShow) break;
                 }
-                currentParent = currentParent.parent;
-                }
+                if (shouldShow) break;
             }
+            currentParent = currentParent.parent;
+            }
+        }
 
-            if (!shouldShow && primarySelection.empty) {
+        if (!shouldShow && primarySelection.empty) {
             if (isCursorAdjacent(primarySelection.head, markerFrom, markerTo)) {
                 shouldShow = true;
             }
-            }
-        } // End else (regular hiding logic)
-
+        }
 
         if (shouldShow) {
           builder.add(markerFrom, markerTo, showOnSelectDecoration);
@@ -228,6 +214,7 @@ export const markdownSyntaxHiding: Extension = ViewPlugin.fromClass(class {
   }
 
   update(update: ViewUpdate) {
+    // Rebuild decorations if document, selection, viewport changed, or extensions reconfigured
     if (update.docChanged || update.selectionSet || update.viewportChanged || update.transactions.some(tr => tr.reconfigured)) {
       this.decorations = buildSyntaxHidingDecorations(update.view);
     }

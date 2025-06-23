@@ -5,11 +5,11 @@ export const HIDEABLE_MARK_NAMES = new Set([
   'StrongMark',
   'StrikethroughMark',
   'HighlightMark',
-  'CodeMark',
+  //'CodeMark',
   'BlockquoteMark',
   'HorizontalRule',
-  'LinkMark', // The '[' and ']' of a link
-  'URL',      // The (url) part of a link
+  //'LinkMark', // The '[' and ']' of a link
+  //'URL',      // The (url) part of a link
   'HeaderMark', // <-- **ADD THIS FOR HEADERS**
 ]);
 
@@ -18,13 +18,13 @@ export const HIDEABLE_MARK_NAMES = new Set([
 export const CONTENT_NODE_NAMES_FOR_MARKER_REVEAL = new Set([
   'Paragraph',
   'Blockquote',
-  'CodeBlock',
+  //'CodeBlock',
   'InlineCode',
   'StrongEmphasis',
   'Emphasis',
   'Strikethrough',
   'Highlight',
-  'Link', // The entire Link node itself (e.g., [text](url))
+  //'Link', // The entire Link node itself (e.g., [text](url))
   // Add ATXHeading as a content node that should reveal its HeaderMark
   'ATXHeading1',
   'ATXHeading2',
@@ -32,6 +32,4 @@ export const CONTENT_NODE_NAMES_FOR_MARKER_REVEAL = new Set([
   'ATXHeading4',
   'ATXHeading5',
   'ATXHeading6',
-  'SetextHeading1',
-  'SetextHeading2',
 ]);
