@@ -1,4 +1,4 @@
-// src/extensions/markdownLinkTransformation.ts
+// src/extensions/Web Links/markdownLinkTransformation.ts
 
 import {
   EditorView,
@@ -9,17 +9,19 @@ import {
   DecorationSet
 } from '@codemirror/view';
 
+// EditorState is declared but its value is never read. This is fine if not used elsewhere directly.
 import { EditorState } from '@codemirror/state';
 import { syntaxTree } from '@codemirror/language';
 import { RangeSetBuilder } from '@codemirror/state';
-import { SyntaxNode } from '@lezer/common';
+import { SyntaxNode } from '@lezer/common'; // Explicitly import SyntaxNode for type hinting
+
 
 import { shouldShowRawMarkdown } from './linkVisibilityLogic';
 
 
 class LinkTextWidget extends WidgetType {
   private isEmptyUrl: boolean;
-  private domElement: HTMLElement | null = null; 
+  private domElement: HTMLElement | null = null;
 
   constructor(
     readonly text: string,
@@ -112,7 +114,7 @@ export const markdownLinkTransformation = ViewPlugin.fromClass(class {
     const builder = new RangeSetBuilder<Decoration>();
     const tree = syntaxTree(view.state);
     const doc = view.state.doc;
-    
+
     for (let { from, to } of view.visibleRanges) {
       tree.iterate({
         from, to,
@@ -121,39 +123,55 @@ export const markdownLinkTransformation = ViewPlugin.fromClass(class {
           const { from: nodeFrom, to: nodeTo, type } = node;
 
           if (type.name === 'Link') {
-            const shouldBeRaw = shouldShowRawMarkdown(view, node); // This will return false
+            const shouldBeRaw = shouldShowRawMarkdown(view, node);
 
             if (shouldBeRaw) {
-                // This block should NOT be hit with current shouldShowRawMarkdown.
-                return true; // Skip decoration, show raw markdown
+              return true;
             }
 
-            // This block *should* always be hit for Link nodes.
+            // --- Extract Link Display Text and URL ---
             let linkDisplayText = '';
             let urlContent = '';
 
-            let linkTextNode = node.getChild('LinkText');
-            if (linkTextNode) {
-                linkDisplayText = doc.sliceString(linkTextNode.from, linkTextNode.to).trim();
+            let openBracketNode: SyntaxNode | null = null;
+            let closeBracketNode: SyntaxNode | null = null;
+            let urlNode: SyntaxNode | null = null;
+
+            // Iterate over the direct children of the Link node
+            let currentChild: SyntaxNode | null = node.firstChild;
+            while (currentChild) {
+                if (currentChild.type.name === 'LinkMark') {
+                    const markText = doc.sliceString(currentChild.from, currentChild.to);
+                    if (markText === '[') {
+                        openBracketNode = currentChild;
+                    } else if (markText === ']') {
+                        closeBracketNode = currentChild;
+                    }
+                } else if (currentChild.type.name === 'URL') {
+                    urlNode = currentChild;
+                }
+                currentChild = currentChild.nextSibling;
             }
 
-            let urlNode = node.getChild('URL');
+            // Extract link display text between the brackets if they exist and are correctly ordered
+            if (openBracketNode && closeBracketNode && openBracketNode.to < closeBracketNode.from) {
+                linkDisplayText = doc.sliceString(openBracketNode.to, closeBracketNode.from).trim();
+            }
+
+            // Get URL content
             if (urlNode) {
-                urlContent = doc.sliceString(urlNode.from, urlNode.to);
-                if (urlContent.startsWith('(') && urlContent.endsWith(')')) {
-                    urlContent = urlContent.substring(1, urlContent.length - 1).trim();
+                urlContent = doc.sliceString(urlNode.from, urlNode.to).trim();
+            }
+
+            // Fallback for empty links
+            if (linkDisplayText.length === 0) {
+                if (urlContent.length > 0) {
+                    linkDisplayText = urlContent;
                 } else {
-                    urlContent = urlContent.trim();
+                    linkDisplayText = 'Empty Link';
                 }
             }
-            
-            // Fallback for empty links, so they still display something visually
-            if (linkDisplayText.length === 0 && urlContent.length > 0) {
-                linkDisplayText = urlContent;
-            } else if (linkDisplayText.length === 0 && urlContent.length === 0) {
-                linkDisplayText = 'Empty Link';
-            }
-
+            // --- End Extraction ---
 
             builder.add(nodeFrom, nodeTo, Decoration.replace({
                 widget: new LinkTextWidget(linkDisplayText, urlContent, nodeFrom, nodeTo, view),
