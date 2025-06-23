@@ -3,7 +3,7 @@
 import { Extension, RangeSet } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin, ViewUpdate } from '@codemirror/view';
 import { syntaxTree } from '@codemirror/language';
-import { RangeSetBuilder } from '@codemirror/state'; // Corrected this line
+import { RangeSetBuilder } from '@codemirror/state'; // Corrected import
 import { SyntaxNode } from '@lezer/common';
 
 import { HIDEABLE_MARK_NAMES, CONTENT_NODE_NAMES_FOR_MARKER_REVEAL } from './markers';
@@ -16,11 +16,6 @@ function intersects(range1From: number, range1To: number, range2From: number, ra
 // Helper function: Checks if cursor is adjacent to a marker (for empty selections/cursors)
 function isCursorAdjacent(cursorPos: number, markerFrom: number, markerTo: number): boolean {
   return cursorPos === markerFrom || cursorPos === markerTo;
-}
-
-// Helper function: Checks if a cursor (empty selection) is *inside* a range.
-function isCursorInside(cursorPos: number, rangeFrom: number, rangeTo: number): boolean {
-    return cursorPos > rangeFrom && cursorPos < rangeTo;
 }
 
 
@@ -62,7 +57,9 @@ function buildSyntaxHidingDecorations(view: EditorView): RangeSet<Decoration> {
       const { node } = nodeRef;
       const { from: nodeFrom, to: nodeTo, type } = node;
 
-      // NEW LOGIC: Explicitly handle incomplete link markers to ensure they are always visible
+      // Explicitly handle incomplete link markers to ensure they are always visible
+      // if the cursor is near, overriding any potential hiding by other decorations.
+      // This is for `[` `]` `(` `)` characters when they are *not* part of a full `Link` node.
       if (type.name === 'SquareBracketOpen' || type.name === 'SquareBracketClose' || type.name === 'Paren') {
           let forceShowMarker = false;
 
@@ -85,7 +82,7 @@ function buildSyntaxHidingDecorations(view: EditorView): RangeSet<Decoration> {
       }
 
       // Special handling for HeaderMark to include trailing space
-      else if (type.name === 'HeaderMark') { // Changed to else if to prevent overlapping with LinkMarks if they somehow match
+      else if (type.name === 'HeaderMark') {
         const markerFrom = nodeFrom;
         let markerTo = nodeTo;
 
@@ -162,26 +159,19 @@ function buildSyntaxHidingDecorations(view: EditorView): RangeSet<Decoration> {
 
         let shouldShow = false;
 
-        console.log(`--- Checking HIDEABLE_MARK: ${type.name} at [${markerFrom}, ${markerTo}] ---`);
-        console.log(`  Current primarySelection: from=${primarySelection.from}, to=${primarySelection.to}, empty=${primarySelection.empty}, head=${primarySelection.head}`);
-
-
         // Rule 1: Show if selected directly
         for (const range of selection.ranges) {
             if (intersects(range.from, range.to, markerFrom, markerTo)) {
                 shouldShow = true;
-                console.log(`  Rule 1: Selection overlaps marker directly.`);
                 break;
             }
         }
 
         // Rule 2: Special case for HorizontalRule or BlockquoteMark: show if selection on line
-        // This was the source of some broad "showing raw" for inline elements.
-        // It's now correctly scoped to only these block-level markers.
+        // This is correctly scoped to only these block-level markers.
         if (!shouldShow && (type.name === 'HorizontalRule' || type.name === 'BlockquoteMark')) {
             if (isSelectionOnLine(markerFrom)) {
                 shouldShow = true;
-                console.log(`  Rule 2: Selection on line of HorizontalRule/BlockquoteMark.`);
             }
         }
 
@@ -194,17 +184,14 @@ function buildSyntaxHidingDecorations(view: EditorView): RangeSet<Decoration> {
             }
 
             if (parentContentNode) {
-                // Check if the primary cursor is inside the content node (for empty selections)
-                // Using >= and <= for inclusivity if the cursor is exactly at the boundary of the content.
+                // Check if the primary cursor is inside/at boundary of the content node (for empty selections)
                 if (primarySelection.empty && primarySelection.head >= parentContentNode.from && primarySelection.head <= parentContentNode.to) {
                     shouldShow = true;
-                    console.log(`  Rule 3: Cursor is inside/at boundary of parent content node (${parentContentNode.type.name}).`);
                 } else {
                     // Check if any part of the selection overlaps with the content node (for non-empty selections)
                     for (const range of selection.ranges) {
                         if (intersects(range.from, range.to, parentContentNode.from, parentContentNode.to)) {
                             shouldShow = true;
-                            console.log(`  Rule 3: Selection overlaps parent content node (${parentContentNode.type.name}).`);
                             break;
                         }
                     }
@@ -216,11 +203,8 @@ function buildSyntaxHidingDecorations(view: EditorView): RangeSet<Decoration> {
         if (!shouldShow && primarySelection.empty) {
             if (isCursorAdjacent(primarySelection.head, markerFrom, markerTo)) {
                 shouldShow = true;
-                console.log(`  Rule 4: Cursor is adjacent.`);
             }
         }
-
-        console.log(`  Final decision for ${type.name}: shouldShow = ${shouldShow}`);
 
         if (shouldShow) {
           builder.add(markerFrom, markerTo, showOnSelectDecoration);
