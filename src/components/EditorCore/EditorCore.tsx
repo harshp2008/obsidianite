@@ -1,41 +1,15 @@
-// C:\Users\harsh\Desktop\obsidianite\src\components\EditorCore\EditorCore.tsx
+// src/components/EditorCore/EditorCore.tsx
 
+import React, { useRef, useEffect } from 'react'; // Corrected React imports
+import { EditorView } from '@codemirror/view'; // Direct import
+import { EditorState, Extension } from '@codemirror/state'; // Direct import
 
-import { defaultConfig } from './editor_core_config';
+import { logLezerTree } from '../../utils/lezerInspector'; // Direct import
+
 import {
-    useRef,
-    useEffect,
-    Extension,
-    EditorView,
-    history,
-    keymap,
-    historyKeymap,
-    defaultKeymap,
-    highlightSelectionMatches,
-    searchKeymap,
-    dropCursor, 
-    lintKeymap, 
-    drawSelection, 
-    highlightActiveLine, 
-    rectangularSelection, 
-    crosshairCursor, 
-    highlightActiveLineGutter, 
-    EditorState, 
-    markdown, 
-    markdownLanguage, 
-    GFM, 
-    markdownHighlightExtension, 
-    javascript, 
-    syntaxHighlighting, 
-    oneDark, 
-    customHighlightStyle, 
-    mySelectionTheme, 
-    markdownLinkTransformation, 
-    markdownSyntaxHiding, 
-    listBulletExtension, 
-    horizontalRuleExtension, 
-    logLezerTree
-} from  './editor_core_imports'
+  initialContent,
+  fullExtensions,
+} from './editor_constants'; // Import constants and extensions from the new file
 
 // Import the necessary styles
 import './editorCore.css';
@@ -43,50 +17,29 @@ import './editorCore.css';
 
 interface EditorCoreProps {
   debugMode?: boolean;
+  initialDoc?: string; // Allow initial content to be passed as a prop
+  onChange?: (doc: string) => void; // Callback for content changes
 }
 
-// Make it that debug mode is false by default
-// This allows the component to be used without passing props, defaulting to debugMode: false 
-
-export default function EditorCore( { debugMode = false } : EditorCoreProps ) {
-
+export default function EditorCore({ debugMode = false, initialDoc = initialContent, onChange }: EditorCoreProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
 
   useEffect(() => {
     if (editorRef.current && !viewRef.current) {
-      const basicExtensionsWithoutLineNumbers: Extension[] = [
-        history(),
-        keymap.of(historyKeymap),
-        keymap.of(defaultKeymap),
-        highlightSelectionMatches(), // Ensure this is present for proper selection match highlighting
-        keymap.of(searchKeymap),
-        dropCursor(),
-        keymap.of(lintKeymap),
-        drawSelection(), // Essential for CodeMirror to draw its own selection background
-        highlightActiveLine(),
-        rectangularSelection(),
-        crosshairCursor(),
-        highlightActiveLineGutter(),
+      const extensions: Extension[] = [
+        ...fullExtensions, // Use the combined extensions from constants
+        // Add a listener for document changes, if a callback is provided
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged) {
+            onChange?.(update.state.doc.toString());
+          }
+        }),
       ];
 
       const initialState = EditorState.create({
-        doc: defaultConfig,
-        extensions: [
-          ...basicExtensionsWithoutLineNumbers,
-          markdown({
-            base: markdownLanguage,
-            extensions: [GFM, markdownHighlightExtension], // GFM is an extension bundle providing Tables, TaskList, Strikethrough, and Autolink.
-          }),
-          javascript(),
-          syntaxHighlighting(customHighlightStyle),
-          oneDark, // Your base theme
-          mySelectionTheme, // <--- ADD YOUR CUSTOM SELECTION THEME HERE (after oneDark to override)
-          markdownLinkTransformation,
-          markdownSyntaxHiding,
-          listBulletExtension,
-          horizontalRuleExtension
-        ],
+        doc: initialDoc, // Use initialDoc prop
+        extensions: extensions,
       });
 
       const view = new EditorView({
@@ -101,7 +54,15 @@ export default function EditorCore( { debugMode = false } : EditorCoreProps ) {
         viewRef.current = null;
       };
     }
-  }, []);
+  }, [initialDoc, onChange]); // Re-run effect if initialDoc or onChange changes
+
+  // Effect to handle debugMode changes
+  useEffect(() => {
+    if (debugMode) {
+      console.log('EditorCore mounted with debug mode enabled');
+    }
+  }, [debugMode]);
+
 
   const handleLogTree = () => {
     if (viewRef.current) {
@@ -109,26 +70,16 @@ export default function EditorCore( { debugMode = false } : EditorCoreProps ) {
     }
   };
 
-    useEffect(() => {
-        if (debugMode) {
-        console.log('EditorCore mounted with debug mode enabled');
-        }
-    }, [debugMode]);
-
-
-    let debugComponent = (
-        <div className="debug-info">
-            <p>Debug Mode: {debugMode ? 'Enabled' : 'Disabled'}</p>
-            <button onClick={handleLogTree} className="log-button">Log Lezer Tree</button>
-        </div>
-    )
-
+  let debugComponent = (
+    <div className="debug-info">
+      <p>Debug Mode: {debugMode ? 'Enabled' : 'Disabled'}</p>
+      <button onClick={handleLogTree} className="log-button">Log Lezer Tree</button>
+    </div>
+  )
 
   return (
-    <div className="App">
-
+    <div className="App"> {/* This "App" class might be causing conflict with your main App.css */}
       { debugMode ? debugComponent : null } 
-      
       <div ref={editorRef} className="editor-container"></div>
     </div>
   );
