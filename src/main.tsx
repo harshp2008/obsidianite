@@ -1,5 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import './main.css'
+
 
 import EditorCore from './components/EditorCore/EditorCore.tsx'
 

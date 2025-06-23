@@ -5,7 +5,7 @@ export const HIDEABLE_MARK_NAMES = new Set([
   'StrongMark',
   'StrikethroughMark',
   'HighlightMark',
-  //'CodeMark',
+  'CodeMark',
   'BlockquoteMark',
   'HorizontalRule',
   //'LinkMark', // The '[' and ']' of a link
@@ -18,7 +18,7 @@ export const HIDEABLE_MARK_NAMES = new Set([
 export const CONTENT_NODE_NAMES_FOR_MARKER_REVEAL = new Set([
   'Paragraph',
   'Blockquote',
-  //'CodeBlock',
+  'CodeBlock',
   'InlineCode',
   'StrongEmphasis',
   'Emphasis',

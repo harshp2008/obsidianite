@@ -71,8 +71,9 @@ export default function EditorCore({ debugMode = false, initialDoc = initialCont
   };
 
   let debugComponent = (
-    <div className="debug-info">
-      <p>Debug Mode: {debugMode ? 'Enabled' : 'Disabled'}</p>
+    <div className="debug-info flex flex-row justify-items-start bg-amber-500 gap-5 items-center p-2">
+    
+      <span className='h-fit text-black border-2 py-1 px-2 rounded-2xl'>Debug Mode: {debugMode ? 'Enabled' : 'Disabled'}</span>
       <button onClick={handleLogTree} className="log-button">Log Lezer Tree</button>
     </div>
   )
