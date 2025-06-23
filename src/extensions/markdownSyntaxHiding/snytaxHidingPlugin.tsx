@@ -1,9 +1,9 @@
-// src/extensions/markdownSyntaxHiding/syntaxHidingPlugin.ts
+// src/extensions/markdownSyntaxHiding/syntaxHidingPlugin.tsx
 
 import { Extension, RangeSet } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin, ViewUpdate } from '@codemirror/view';
 import { syntaxTree } from '@codemirror/language';
-import { RangeSetBuilder } from '@codemirror/state';
+import { RangeSetBuilder } from '@codemirror/state'; // Corrected this line
 import { SyntaxNode } from '@lezer/common';
 
 import { HIDEABLE_MARK_NAMES, CONTENT_NODE_NAMES_FOR_MARKER_REVEAL } from './markers';
@@ -16,6 +16,11 @@ function intersects(range1From: number, range1To: number, range2From: number, ra
 // Helper function: Checks if cursor is adjacent to a marker (for empty selections/cursors)
 function isCursorAdjacent(cursorPos: number, markerFrom: number, markerTo: number): boolean {
   return cursorPos === markerFrom || cursorPos === markerTo;
+}
+
+// Helper function: Checks if a cursor (empty selection) is *inside* a range.
+function isCursorInside(cursorPos: number, rangeFrom: number, rangeTo: number): boolean {
+    return cursorPos > rangeFrom && cursorPos < rangeTo;
 }
 
 
@@ -45,7 +50,6 @@ function buildSyntaxHidingDecorations(view: EditorView): RangeSet<Decoration> {
   const primarySelection = selection.main;
 
   // Helper for checking if selection is on the line of a given position
-  // This helper is for *block-level* elements or elements that imply line-level relevance.
   const isSelectionOnLine = (pos: number): boolean => {
     const line = state.doc.lineAt(pos);
     return primarySelection.from <= line.to && primarySelection.to >= line.from;
@@ -59,19 +63,14 @@ function buildSyntaxHidingDecorations(view: EditorView): RangeSet<Decoration> {
       const { from: nodeFrom, to: nodeTo, type } = node;
 
       // NEW LOGIC: Explicitly handle incomplete link markers to ensure they are always visible
-      // if the cursor is near, overriding any potential hiding by other decorations.
-      // This is for `[` `]` `(` `)` characters when they are *not* part of a full `Link` node.
       if (type.name === 'SquareBracketOpen' || type.name === 'SquareBracketClose' || type.name === 'Paren') {
           let forceShowMarker = false;
 
-          // Check if the cursor is anywhere within or immediately adjacent to this bracket/paren
           if (primarySelection.empty) {
-              // Cursor immediately before/after or inside the marker
               if (primarySelection.head >= nodeFrom && primarySelection.head <= nodeTo) {
                   forceShowMarker = true;
               }
           }
-          // If any part of the selection overlaps this marker, show it
           for (const range of selection.ranges) {
               if (intersects(range.from, range.to, nodeFrom, nodeTo)) {
                   forceShowMarker = true;
@@ -81,16 +80,12 @@ function buildSyntaxHidingDecorations(view: EditorView): RangeSet<Decoration> {
 
           if (forceShowMarker) {
               builder.add(nodeFrom, nodeTo, showOnSelectDecoration);
-              return true; // Continue iteration, but ensure this is shown
+              return true;
           }
-          // IMPORTANT: If not forced to show, let other general rules (if any apply) decide,
-          // but for these specific nodes, the default might be to hide if they are part
-          // of a fully widgetized link (which markdownLinkTransformation handles).
-          // Since we removed Link-specific hiding from here, this might not need an 'else' branch for hiding.
       }
 
       // Special handling for HeaderMark to include trailing space
-      if (type.name === 'HeaderMark') {
+      else if (type.name === 'HeaderMark') { // Changed to else if to prevent overlapping with LinkMarks if they somehow match
         const markerFrom = nodeFrom;
         let markerTo = nodeTo;
 
@@ -137,6 +132,7 @@ function buildSyntaxHidingDecorations(view: EditorView): RangeSet<Decoration> {
                 parentContentNode = parentContentNode.parent;
             }
             if (parentContentNode) {
+                // For header marks, any selection within the heading content should reveal the mark.
                 for (const range of selection.ranges) {
                     if (intersects(range.from, range.to, parentContentNode.from, parentContentNode.to)) {
                         shouldShow = true;
@@ -166,46 +162,65 @@ function buildSyntaxHidingDecorations(view: EditorView): RangeSet<Decoration> {
 
         let shouldShow = false;
 
-        // Rule: Show if selected directly
+        console.log(`--- Checking HIDEABLE_MARK: ${type.name} at [${markerFrom}, ${markerTo}] ---`);
+        console.log(`  Current primarySelection: from=${primarySelection.from}, to=${primarySelection.to}, empty=${primarySelection.empty}, head=${primarySelection.head}`);
+
+
+        // Rule 1: Show if selected directly
         for (const range of selection.ranges) {
             if (intersects(range.from, range.to, markerFrom, markerTo)) {
                 shouldShow = true;
+                console.log(`  Rule 1: Selection overlaps marker directly.`);
                 break;
             }
         }
 
-        // Rule: Special case for HorizontalRule or BlockquoteMark: show if selection on line
+        // Rule 2: Special case for HorizontalRule or BlockquoteMark: show if selection on line
         // This was the source of some broad "showing raw" for inline elements.
         // It's now correctly scoped to only these block-level markers.
         if (!shouldShow && (type.name === 'HorizontalRule' || type.name === 'BlockquoteMark')) {
             if (isSelectionOnLine(markerFrom)) {
                 shouldShow = true;
+                console.log(`  Rule 2: Selection on line of HorizontalRule/BlockquoteMark.`);
             }
         }
 
-        // Rule: Show if content node (e.g., "bold" in **bold**) is selected
+        // Rule 3: Show if content node (e.g., "bold" in **bold**) is selected or cursor is inside content.
         if (!shouldShow) {
-            let currentParent: SyntaxNode | null = node.parent;
-            while (currentParent) {
-            if (CONTENT_NODE_NAMES_FOR_MARKER_REVEAL.has(currentParent.type.name)) {
-                for (const range of selection.ranges) {
-                    if (intersects(range.from, range.to, currentParent.from, currentParent.to)) {
-                        shouldShow = true;
-                        break;
+            let parentContentNode: SyntaxNode | null = node.parent;
+            // Iterate up the tree until a CONTENT_NODE_NAMES_FOR_MARKER_REVEAL is found or null
+            while (parentContentNode && !CONTENT_NODE_NAMES_FOR_MARKER_REVEAL.has(parentContentNode.type.name)) {
+                parentContentNode = parentContentNode.parent;
+            }
+
+            if (parentContentNode) {
+                // Check if the primary cursor is inside the content node (for empty selections)
+                // Using >= and <= for inclusivity if the cursor is exactly at the boundary of the content.
+                if (primarySelection.empty && primarySelection.head >= parentContentNode.from && primarySelection.head <= parentContentNode.to) {
+                    shouldShow = true;
+                    console.log(`  Rule 3: Cursor is inside/at boundary of parent content node (${parentContentNode.type.name}).`);
+                } else {
+                    // Check if any part of the selection overlaps with the content node (for non-empty selections)
+                    for (const range of selection.ranges) {
+                        if (intersects(range.from, range.to, parentContentNode.from, parentContentNode.to)) {
+                            shouldShow = true;
+                            console.log(`  Rule 3: Selection overlaps parent content node (${parentContentNode.type.name}).`);
+                            break;
+                        }
                     }
                 }
-                if (shouldShow) break;
-            }
-            currentParent = currentParent.parent;
             }
         }
 
-        // Rule: Show if cursor is adjacent
+        // Rule 4: Show if cursor is adjacent (empty selection only)
         if (!shouldShow && primarySelection.empty) {
             if (isCursorAdjacent(primarySelection.head, markerFrom, markerTo)) {
                 shouldShow = true;
+                console.log(`  Rule 4: Cursor is adjacent.`);
             }
         }
+
+        console.log(`  Final decision for ${type.name}: shouldShow = ${shouldShow}`);
 
         if (shouldShow) {
           builder.add(markerFrom, markerTo, showOnSelectDecoration);
@@ -228,7 +243,6 @@ export const markdownSyntaxHiding: Extension = ViewPlugin.fromClass(class {
   }
 
   update(update: ViewUpdate) {
-    // Rebuild decorations if document, selection, viewport changed, or extensions reconfigured
     if (update.docChanged || update.selectionSet || update.viewportChanged || update.transactions.some(tr => tr.reconfigured)) {
       this.decorations = buildSyntaxHidingDecorations(update.view);
     }
