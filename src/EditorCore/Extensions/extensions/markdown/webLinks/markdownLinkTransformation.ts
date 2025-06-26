@@ -163,12 +163,14 @@ export const markdownLinkTransformation = ViewPlugin.fromClass(class {
                 urlContent = doc.sliceString(urlNode.from, urlNode.to).trim();
             }
 
-            // Fallback for empty links
+            // Fallback for empty links - use URL as display text if link text is empty
             if (linkDisplayText.length === 0) {
                 if (urlContent.length > 0) {
                     linkDisplayText = urlContent;
                 } else {
-                    linkDisplayText = 'Empty Link';
+                    // Don't show anything for completely empty links - this should be
+                    // caught by shouldShowRawMarkdown now and display the raw markdown
+                    return true;
                 }
             }
             // --- End Extraction ---

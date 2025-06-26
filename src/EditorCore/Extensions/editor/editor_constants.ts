@@ -28,6 +28,9 @@ import { listBulletExtension } from '../extensions/markdown/list/markdownListBul
 import { markdownHighlightExtension, highlightTags } from '../extensions/markdown/highlight/markdownHighlightExtension';
 import { horizontalRuleExtension } from '../extensions/markdown/horizontalRule/horizontalRuleExtension';
 
+import { closeBrackets } from '@codemirror/autocomplete';
+import { markdownBracketCompletion } from './closeBracketsConfig';
+
 // Initial content for the editor
 export const initialContent = `## My Markdown Doc
 
@@ -118,6 +121,7 @@ export const basicExtensions: Extension[] = [
   rectangularSelection(),
   crosshairCursor(),
   highlightActiveLineGutter(),
+
 ];
 
 // All Markdown and language-specific extensions, plus custom extensions
@@ -134,6 +138,9 @@ export const markdownExtensions: Extension[] = [
   markdownSyntaxHiding,
   listBulletExtension,
   horizontalRuleExtension,
+
+  markdownBracketCompletion // Add auto bracket insertion
+
 ];
 
 // Combine all extensions

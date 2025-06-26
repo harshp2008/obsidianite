@@ -48,6 +48,54 @@ function isCursorAdjacentToLink(selection: EditorSelection, linkNode: SyntaxNode
   return cursorPos === linkFrom || cursorPos === linkTo;
 }
 
+// Helper: Determines if the link text is empty (i.e., [])
+function isLinkTextEmpty(view: EditorView, linkNode: SyntaxNode): boolean {
+  const doc = view.state.doc;
+  let openBracketNode: SyntaxNode | null = null;
+  let closeBracketNode: SyntaxNode | null = null;
+  
+  // Find bracket nodes
+  let currentChild = linkNode.firstChild;
+  while (currentChild) {
+    if (currentChild.type.name === 'LinkMark') {
+      const markText = doc.sliceString(currentChild.from, currentChild.to);
+      if (markText === '[') {
+        openBracketNode = currentChild;
+      } else if (markText === ']') {
+        closeBracketNode = currentChild;
+      }
+    }
+    currentChild = currentChild.nextSibling;
+  }
+  
+  // Check if brackets exist and if there's text between them
+  if (openBracketNode && closeBracketNode && openBracketNode.to < closeBracketNode.from) {
+    const linkText = doc.sliceString(openBracketNode.to, closeBracketNode.from).trim();
+    return linkText.length === 0;
+  }
+  
+  return false;
+}
+
+// Helper: Check if URL part is incomplete (missing closing parenthesis)
+function isUrlPartIncomplete(view: EditorView, linkNode: SyntaxNode): boolean {
+  const doc = view.state.doc;
+  let hasOpenParen = false;
+  let hasCloseParen = false;
+  
+  let currentChild = linkNode.firstChild;
+  while (currentChild) {
+    if (currentChild.type.name === 'LinkMark') {
+      const markText = doc.sliceString(currentChild.from, currentChild.to);
+      if (markText === '(') hasOpenParen = true;
+      if (markText === ')') hasCloseParen = true;
+    }
+    currentChild = currentChild.nextSibling;
+  }
+  
+  return hasOpenParen && !hasCloseParen;
+}
+
 
 /**
  * Determines whether the raw markdown of a link should be shown instead of the transformed widget.
@@ -59,6 +107,16 @@ function isCursorAdjacentToLink(selection: EditorSelection, linkNode: SyntaxNode
 export function shouldShowRawMarkdown(view: EditorView, linkNode: SyntaxNode): boolean {
   const { state } = view;
   const selection = state.selection;
+
+  // Rule 0: If the link text is empty, always show raw markdown
+  if (isLinkTextEmpty(view, linkNode)) {
+    return true;
+  }
+  
+  // Rule 0.5: If URL part is incomplete (e.g., "[](" without closing ")"), show raw
+  if (isUrlPartIncomplete(view, linkNode)) {
+    return true;
+  }
 
   // Rule 1: If any part of the selection overlaps with the entire link node, show raw.
   for (const range of selection.ranges) {
