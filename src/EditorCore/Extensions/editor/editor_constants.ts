@@ -22,11 +22,11 @@ import {
 import { oneDark } from '@codemirror/theme-one-dark';
 
 // Custom extensions
-import { markdownLinkTransformation } from '../../extensions/Web Links/markdownLinkTransformation';
-import { markdownSyntaxHiding } from '../../extensions/markdownSyntaxHiding/snytaxHidingPlugin';
-import { listBulletExtension } from '../../extensions/markdownListBulletExtension';
-import { markdownHighlightExtension, highlightTags } from '../../extensions/markdownHighlightExtension';
-import { horizontalRuleExtension } from '../../extensions/horizontalRuleExtension';
+import { markdownLinkTransformation } from '../extensions/markdown/webLinks/markdownLinkTransformation';
+import { markdownSyntaxHiding } from '../extensions/markdown/syntaxHiding/snytaxHidingPlugin';
+import { listBulletExtension } from '../extensions/markdown/list/markdownListBulletExtension';
+import { markdownHighlightExtension, highlightTags } from '../extensions/markdown/highlight/markdownHighlightExtension';
+import { horizontalRuleExtension } from '../extensions/markdown/horizontalRule/horizontalRuleExtension';
 
 // Initial content for the editor
 export const initialContent = `## My Markdown Doc

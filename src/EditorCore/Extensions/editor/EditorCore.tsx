@@ -4,7 +4,7 @@ import  { useRef, useEffect } from 'react'; // Corrected React imports
 import { EditorView } from '@codemirror/view'; // Direct import
 import { EditorState, Extension } from '@codemirror/state'; // Direct import
 
-import { logLezerTree } from '../../utils/lezerInspector'; // Direct import
+import { logLezerTree } from '../../../utils/lezerInspector'; // Direct import
 
 import {
   initialContent,
