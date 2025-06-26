@@ -87,22 +87,18 @@ export const customHighlightStyle = HighlightStyle.define([
 // Custom theme extension for selection
 export const mySelectionTheme = EditorView.theme({
   "&.cm-focused .cm-selectionBackground": {
-    backgroundColor: "#BBDEFB",
+    backgroundColor: "var(--cm-selection-background, rgba(58, 73, 100, 0.8))",
   },
   ".cm-selectionBackground": {
-    backgroundColor: "#BBDEFB",
+    backgroundColor: "var(--cm-selection-background, rgba(58, 73, 100, 0.8))",
   },
-  "&.cm-focused .cm-selectionBackground span": {
-    color: "#000",
-  },
-  "&.cm-focused .cm-selectionBackground .cm-highlight": {
-    color: "#000",
-  },
-  "&.cm-focused .cm-selectionBackground .cm-inline-code": {
-    color: "#000",
+  // Remove specific color overrides since we handle these in CSS with ::selection
+  // Using !important in the CSS ensures our selectors will take precedence
+  ".cm-selectionMatch": {
+    backgroundColor: "rgba(114, 140, 211, 0.5)",
   },
   "&.cm-focused .cm-cursor": {
-    borderLeftColor: "#000",
+    borderLeftColor: "#fff",
   }
 });
 

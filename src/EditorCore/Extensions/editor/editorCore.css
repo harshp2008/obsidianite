@@ -9,6 +9,12 @@
   --cm-link-color: #00c6e6; /* Default link color */
   --cm-link-visited-color: #ac88c6; /* Visited link color */
   --cm-link-hover-color: #d2ab17; /* Link hover color */
+  /* Selection color variables */
+  --cm-selection-background: rgba(58, 73, 100, 0.8); /* Default selection background */
+  --cm-selection-text: inherit; /* Default selection text color */
+  --cm-highlight-selection-bg: rgba(45, 69, 155, 0.85); /* Selection in highlight elements */
+  --cm-code-selection-bg: rgba(70, 70, 120, 0.85); /* Selection in code blocks */
+  --cm-strikethrough-selection-bg: rgba(80, 50, 60, 0.85); /* Selection in strikethrough text */
   /* Add other colors as needed, e.g., --cm-selection-background-color */
 }
 
@@ -344,4 +350,98 @@
 
 div.cm-activeLine > span.cm-link {
   background-color: hsla(220, 100%, 66%, 0.2);
+}
+
+/* --- Selection Styling --- */
+
+/* Default text selection */
+.cm-editor .cm-selectionBackground {
+  background-color: var(--cm-selection-background) !important;
+  opacity: 0.85 !important; /* Ensure good visibility */
+}
+
+/* Improve selection visibility with pseudo-elements */
+.cm-editor ::selection {
+  background-color: var(--cm-selection-background) !important;
+  color: white !important;
+}
+
+/* Selection styling for highlighted text */
+.cm-editor .cm-highlight.cm-selectionBackground,
+.cm-editor .cm-highlight .cm-selectionBackground {
+  background-color: var(--cm-highlight-selection-bg) !important;
+}
+
+.cm-editor .cm-highlight::selection,
+.cm-editor .cm-highlight *::selection {
+  background-color: var(--cm-highlight-selection-bg) !important;
+  color: white !important;
+}
+
+/* Selection styling for inline code */
+.cm-editor .cm-inline-code.cm-selectionBackground,
+.cm-editor .cm-inline-code .cm-selectionBackground {
+  background-color: var(--cm-code-selection-bg) !important;
+}
+
+.cm-editor .cm-inline-code::selection,
+.cm-editor .cm-inline-code *::selection {
+  background-color: var(--cm-code-selection-bg) !important;
+  color: #d7fc70 !important;
+}
+
+/* Selection styling for strikethrough text */
+.cm-editor .cm-strikethrough.cm-selectionBackground,
+.cm-editor .cm-strikethrough .cm-selectionBackground {
+  background-color: var(--cm-strikethrough-selection-bg) !important;
+}
+
+.cm-editor .cm-strikethrough::selection,
+.cm-editor .cm-strikethrough *::selection {
+  background-color: var(--cm-strikethrough-selection-bg) !important;
+  color: #e0e0e0 !important;
+}
+
+/* Make widget selection more visible */
+.cm-editor .cm-widgetBuffer::selection,
+.cm-editor .cm-widgetBuffer *::selection {
+  background-color: rgba(60, 76, 114, 0.9) !important;
+}
+
+/* Fix z-index issues for decorations and widgets during selection */
+.cm-editor .cm-line > * {
+  position: relative; /* Ensure proper stacking context */
+}
+
+/* Ensure selection is always visible above decoration widgets */
+.cm-editor .cm-selectionLayer {
+  z-index: 100 !important; /* Boost selection layer above decorations */
+}
+
+/* --- Link display widget adjustments --- */
+
+/* Selection in link widgets */
+.App .cm-editor .cm-link-display.cm-selectionBackground,
+.App .cm-editor .cm-link-display .cm-selectionBackground {
+  background-color: rgba(80, 130, 170, 0.85) !important;
+}
+
+.App .cm-editor .cm-link-display::selection,
+.App .cm-editor .cm-link-display *::selection {
+  background-color: rgba(80, 130, 170, 0.85) !important;
+  color: white !important;
+  text-decoration: underline;
+}
+
+/* Make sure link highlights are clearly visible when selected */
+.App .cm-editor .cm-link-display:not(.cm-empty-link).cm-selectionBackground,
+.App .cm-editor .cm-link-display:not(.cm-empty-link) .cm-selectionBackground {
+  background-color: rgba(0, 100, 200, 0.85) !important;
+  color: white !important;
+  text-decoration: underline !important;
+}
+
+/* Fix for selection rendering with replacement decorations */
+.App .cm-editor .cm-content .cm-selectionBackground {
+  mix-blend-mode: multiply; /* This helps the selection stand out on colored backgrounds */
 }
