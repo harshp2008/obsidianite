@@ -10,7 +10,6 @@ import {
 } from '@codemirror/view';
 
 // EditorState is declared but its value is never read. This is fine if not used elsewhere directly.
-import { EditorState } from '@codemirror/state';
 import { syntaxTree } from '@codemirror/language';
 import { RangeSetBuilder } from '@codemirror/state';
 import { SyntaxNode } from '@lezer/common'; // Explicitly import SyntaxNode for type hinting

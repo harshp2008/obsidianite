@@ -28,7 +28,6 @@ import { listBulletExtension } from '../extensions/markdown/list/markdownListBul
 import { markdownHighlightExtension, highlightTags } from '../extensions/markdown/highlight/markdownHighlightExtension';
 import { horizontalRuleExtension } from '../extensions/markdown/horizontalRule/horizontalRuleExtension';
 
-import { closeBrackets } from '@codemirror/autocomplete';
 import { markdownBracketCompletion } from './closeBracketsConfig';
 
 // Initial content for the editor
