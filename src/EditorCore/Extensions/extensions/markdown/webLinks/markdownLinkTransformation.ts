@@ -17,10 +17,31 @@ import { SyntaxNode } from '@lezer/common'; // Explicitly import SyntaxNode for 
 
 import { shouldShowRawMarkdown } from './linkVisibilityLogic';
 
+/**
+ * Ensures a URL has a protocol prefix (https:// by default)
+ * Handles cases like "google.com" or "www.example.org" by adding the protocol
+ */
+function ensureUrlProtocol(url: string): string {
+  url = url.trim();
+  
+  // If URL is empty, return as is
+  if (!url) return url;
+  
+  // If it already has a protocol, return as is
+  if (url.match(/^[a-zA-Z]+:\/\//)) return url;
+  
+  // If starts with www., add https://
+  if (url.startsWith('www.')) {
+    return `https://${url}`;
+  }
+  
+  // For cases like "google.com" without www
+  return `https://${url}`;
+}
 
 class LinkTextWidget extends WidgetType {
-  private isEmptyUrl: boolean;
-  private domElement: HTMLElement | null = null;
+  private isEmptyLink: boolean;
+  private processedUrl: string;
 
   constructor(
     readonly text: string,
@@ -30,7 +51,8 @@ class LinkTextWidget extends WidgetType {
     readonly view: EditorView
   ) {
     super();
-    this.isEmptyUrl = url.trim().length === 0;
+    this.isEmptyLink = text.trim().length === 0 || url.trim().length === 0;
+    this.processedUrl = ensureUrlProtocol(url);
   }
 
   eq(other: WidgetType): boolean {
@@ -43,18 +65,25 @@ class LinkTextWidget extends WidgetType {
 
   toDOM() {
     const anchor = document.createElement('a');
-    anchor.textContent = this.text;
+    anchor.textContent = this.text || '[]';
     anchor.className = 'cm-link-display';
 
+    // Add empty link class if either text or URL is empty
+    if (this.isEmptyLink) {
+      anchor.classList.add('cm-empty-link');
+    }
+    
+    // Set URL properties if URL exists
     if (this.url.trim().length > 0) {
-      anchor.href = this.url;
+      anchor.href = this.processedUrl;
       anchor.target = '_blank';
+      anchor.title = this.url.trim();
 
       anchor.addEventListener('click', (e) => {
         e.preventDefault();
 
         const tempAnchor = document.createElement('a');
-        tempAnchor.href = this.url;
+        tempAnchor.href = this.processedUrl;
         tempAnchor.target = '_blank';
 
         const event = new MouseEvent('click', {
@@ -74,21 +103,17 @@ class LinkTextWidget extends WidgetType {
         });
         this.view.focus();
       });
-
     } else {
-      anchor.classList.add('cm-link-empty-url');
       anchor.href = 'javascript:void(0);';
-      anchor.title = 'Link has no URL';
       anchor.style.cursor = 'text';
     }
 
-    this.domElement = anchor;
     return anchor;
   }
 
   ignoreEvent(event: Event): boolean {
     if ((event.type === 'click' || event.type === 'mousedown') &&
-        this.domElement && event.target === this.domElement && !this.isEmptyUrl) {
+        this.url.trim().length > 0) {
       return true;
     }
     return false;
@@ -163,14 +188,8 @@ export const markdownLinkTransformation = ViewPlugin.fromClass(class {
             }
 
             // Fallback for empty links - use URL as display text if link text is empty
-            if (linkDisplayText.length === 0) {
-                if (urlContent.length > 0) {
-                    linkDisplayText = urlContent;
-                } else {
-                    // Don't show anything for completely empty links - this should be
-                    // caught by shouldShowRawMarkdown now and display the raw markdown
-                    return true;
-                }
+            if (linkDisplayText.length === 0 && urlContent.length > 0) {
+                linkDisplayText = urlContent;
             }
             // --- End Extraction ---
 

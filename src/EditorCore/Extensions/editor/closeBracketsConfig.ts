@@ -1,4 +1,4 @@
-import { closeBrackets, CloseBracketConfig } from "@codemirror/autocomplete";
+import { closeBrackets } from "@codemirror/autocomplete";
 import { markdownLanguage } from "@codemirror/lang-markdown";
 
 /**

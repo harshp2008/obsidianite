@@ -108,10 +108,11 @@ export function shouldShowRawMarkdown(view: EditorView, linkNode: SyntaxNode): b
   const { state } = view;
   const selection = state.selection;
 
-  // Rule 0: If the link text is empty, always show raw markdown
-  if (isLinkTextEmpty(view, linkNode)) {
-    return true;
-  }
+  // Rule 0: If the link text is empty, don't show raw markdown anymore
+  // We'll handle empty links with CSS styling instead
+  // if (isLinkTextEmpty(view, linkNode)) {
+  //   return true;
+  // }
   
   // Rule 0.5: If URL part is incomplete (e.g., "[](" without closing ")"), show raw
   if (isUrlPartIncomplete(view, linkNode)) {
