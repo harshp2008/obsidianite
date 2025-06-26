@@ -9,8 +9,8 @@ export const HIDEABLE_MARK_NAMES = new Set([
   'HeaderMark',       // #
   'QuoteMark',        // >
   //'ListMark',         // - or 1. This is now handled in extension/markdownListBulletExtension.ts
-  'BlockquoteMark',   // > (though sometimes this is the parent of QuoteMark)
   'HorizontalRule',   // ---
+  
   // Potentially add LinkMark if you decide to hide individual link brackets here,
   // but markdownLinkTransformation handles full link hiding.
 ]);

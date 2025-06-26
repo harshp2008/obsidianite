@@ -251,3 +251,27 @@
   color: var(--editor-text-color);
   font-family: monospace;
 }
+
+/* Weblinks Styling */
+
+a.cm-link-display:link {
+  color: #00c6e6;
+  text-decoration: underline;
+}
+
+a.cm-link-display:visited {
+  color: #ac88c6;
+  text-decoration: underline;
+}
+
+a.cm-link-display:hover {
+  color: #d2ab17;
+
+  text-decoration: underline;
+}
+
+a.cm-link-display:active {
+  color: #d2ab17;
+  
+  text-decoration: underline;
+}
