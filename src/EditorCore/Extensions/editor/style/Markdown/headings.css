@@ -1,33 +1,33 @@
 @import '../constant.css';
 
+
+div.cm-line:has( span.cm-header) {
+  padding: var(--cm-header-padding);
+}
+
+.cm-header {
+  color: var(--cm-header-color);
+  font-weight: var(--cm-header-font-weight);
+}
+
 .App .cm-editor .cm-header-1 {
-    color: #e06c75;
-    font-size: 2.2em;
-    font-weight: bold;
+    
+    font-size: var(--cm-h1-size);
+
   }
   .App .cm-editor .cm-header-2 {
-    color: #e06c75;
-    font-size: 1.8em;
-    font-weight: bold;
+    font-size: var(--cm-h2-size);
   }
   .App .cm-editor .cm-header-3 {
-    color: #e06c75;
-    font-size: 1.5em;
-    font-weight: bold;
+    font-size: var(--cm-h3-size);
   }
   .App .cm-editor .cm-header-4 {
-    color: #e06c75;
-    font-size: 1.2em;
-    font-weight: bold;
+    font-size: var(--cm-h4-size);
   }
   .App .cm-editor .cm-header-5 {
-    color: #e06c75;
-    font-size: 1em;
-    font-weight: bold;
+    font-size: var(--cm-h5-size);
   }
   .App .cm-editor .cm-header-6 {
-    color: #e06c75;
-    font-size: 0.9em;
-    font-weight: bold;
+    font-size: var(--cm-h6-size);
   }
   

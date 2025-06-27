@@ -1,10 +1,33 @@
-@import '../constant.css';
+@import "../constant.css";
 
 
-.App .cm-editor .cm-highlight {
-    background-color: rgba(0, 255, 38, 0.15);
-    color: hsl(219, 28%, 90%);
-  }
+/* Base highlight styling */
+.App .cm-editor span.cm-highlight:not(:has(.cm-highlight, .cm-strong, .cm-emphasis))  {
+  background-color: var(--cm-highlight-bg);
+  color: var(--cm-highlight-color);
+
+
+}
+
+
+
+.App .cm-editor .cm-highlight.cm-strong:not(.cm-emphasis) {
+background-color: var(--cm-strong-highlight-bg);
+    color: var(--cm-strong-highlight-color);
+}
+  
+.App .cm-editor .cm-highlight.cm-emphasis:not(.cm-strong) {
+    background-color: var(--cm-emphasis-highlight-bg);
+    color: var(--cm-emphasis-highlight-color);
+}
+
+.App .cm-editor .cm-highlight.cm-strong.cm-emphasis {
+    background-color: var(--cm-strong-emphasis-highlight-bg);
+    color: var(--cm-strong-emphasis-highlight-color);
+}
+
+
+/* Looks cool but is not needed
 .App .cm-editor .cm-widgetBuffer:has(+ .cm-highlight:not(.ͼ13)) {
     padding: 2px;
 }
@@ -26,45 +49,4 @@
     border-bottom-right-radius: 2px;
 }
 
-/* --- Combination Highlight Styles --- */
-
-/* Strong + Highlight combination */
-.App .cm-editor .cm-highlight-strong {
-    background-color: var(--cm-strong-highlight-bg) !important;
-  
-  }
-
-  
-  
-/* Emphasis + Highlight combination */
-.App .cm-editor .cm-highlight-emphasis {
-    background-color: var(--cm-emphasis-highlight-bg) !important;
-    
-}
-  
-/* Strong + Emphasis + Highlight combination */
-.App .cm-editor .cm-highlight-strong-emphasis {
-    background-color: var(--cm-emphasis-strong-highlight-bg) !important;
-}
-  
-
-
-span.cm-highlight-strong-emphasis  {
-
-    color: black !important;
-
-}
-
-
-
-/* Selection styling for highlighted text */
-.cm-editor .cm-highlight.cm-selectionBackground,
-.cm-editor .cm-highlight .cm-selectionBackground {
-  background-color: var(--cm-highlight-selection-bg) !important;
-}
-
-.cm-editor .cm-highlight::selection,
-.cm-editor .cm-highlight *::selection {
-  background-color: var(--cm-highlight-selection-bg) !important;
-  color: white !important;
-}
+*/

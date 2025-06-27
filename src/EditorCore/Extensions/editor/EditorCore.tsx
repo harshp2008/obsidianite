@@ -5,6 +5,7 @@ import { EditorView } from '@codemirror/view'; // Direct import
 import { EditorState, Extension } from '@codemirror/state'; // Direct import
 
 import { logLezerTree } from '../../../utils/lezerInspector'; // Direct import
+import { refreshHighlightFormatting } from '../extensions/markdown/highlight/combinedHighlightExtension';
 
 import {
   initialContent,
@@ -48,6 +49,16 @@ export default function EditorCore({ debugMode = false, initialDoc = initialCont
       });
 
       viewRef.current = view;
+      
+      // Force refresh of highlight formatting after initial render
+      setTimeout(() => {
+        if (viewRef.current) {
+          refreshHighlightFormatting(viewRef.current);
+          
+          // Give focus to the editor to ensure styles are applied
+          viewRef.current.focus();
+        }
+      }, 100);
 
       return () => {
         view.destroy();

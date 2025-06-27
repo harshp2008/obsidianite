@@ -22,17 +22,17 @@
   
   .App .cm-editor .cm-link:not(.cm-empty-link) {
     color: var(--cm-link-color);
-    background-color: hsla(220, 100%, 66%, 0.2);
+    background-color: var(--cm-link-edit-bg);
   }
   
   /* Simple style for empty links - users can customize this to their heart's content */
   .App .cm-editor .cm-empty-link {
-    color: var(--cm-list-bullet-inactive-color);
+    color: var(--cm-inactive-color);
     text-decoration: none;
   }
   
   div.cm-activeLine > span.cm-link {
-    background-color: hsla(220, 100%, 66%, 0.2);
+    background-color: var(--cm-link-edit-bg);
   }  
 
 
@@ -42,20 +42,14 @@
 /* Selection in link widgets */
 .App .cm-editor .cm-link-display.cm-selectionBackground,
 .App .cm-editor .cm-link-display .cm-selectionBackground {
-  background-color: rgba(80, 130, 170, 0.85) !important;
+  background-color: var(--cm-link-selection-bg) !important;
 }
 
 .App .cm-editor .cm-link-display::selection,
 .App .cm-editor .cm-link-display *::selection {
-  background-color: rgba(80, 130, 170, 0.85) !important;
-  color: white !important;
+  background-color: var(--cm-link-selection-bg) !important;
+  color: var(--cm-link-selection-color) !important;
   text-decoration: underline;
 }
 
-/* Make sure link highlights are clearly visible when selected */
-.App .cm-editor .cm-link-display:not(.cm-empty-link).cm-selectionBackground,
-.App .cm-editor .cm-link-display:not(.cm-empty-link) .cm-selectionBackground {
-  background-color: rgba(0, 100, 200, 0.85) !important;
-  color: white !important;
-  text-decoration: underline !important;
-}
+

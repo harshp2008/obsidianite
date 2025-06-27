@@ -3,11 +3,11 @@
 /* Strong and Emphasis Styling */
 
 .App .cm-editor .cm-strong {
-  color: hsl(286, 60%, 67%);
+  color: var(--cm-strong-color);
   font-weight: bold;
 }
 .App .cm-editor .cm-emphasis {
-  color: hsl(39, 67%, 69%);
+  color: var(--cm-emphasis-color);
   font-style: italic;
 }
 
@@ -15,7 +15,7 @@
 
 .App .cm-editor .cm-strikethrough {
   text-decoration: line-through;
-  color: #888;
+  color: var(--cm-strikethrough-color);
 }
 
 /* Selection styling for strikethrough text */
@@ -44,6 +44,12 @@
 }
 
 /* Selection styling for inline code */
+
+.cm-editor .cm-selectionBackground {
+  background-color: var(--cm-selection-background) !important;
+  opacity: 0.85 !important;
+}
+
 
 .cm-editor .cm-inline-code.cm-selectionBackground,
 .cm-editor .cm-inline-code .cm-selectionBackground {

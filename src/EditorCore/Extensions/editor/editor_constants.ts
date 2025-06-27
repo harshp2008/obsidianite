@@ -41,6 +41,8 @@ This is some **bold** text and *italic* text.
 *==emphasis highlight==*
 ***==strong emphasis highlight==***
 
+==*italic*, **bold**, ***italic and bold***==
+
 ~~strikethrough~~
 \`inline code\`
 
@@ -92,15 +94,15 @@ export const customHighlightStyle = HighlightStyle.define([
 // Custom theme extension for selection
 export const mySelectionTheme = EditorView.theme({
   "&.cm-focused .cm-selectionBackground": {
-    backgroundColor: "var(--cm-selection-background, rgba(58, 73, 100, 0.8))",
+    backgroundColor: "var(--cm-selection-background) !important",
   },
   ".cm-selectionBackground": {
-    backgroundColor: "var(--cm-selection-background, rgba(58, 73, 100, 0.8))",
+    backgroundColor: "var(--cm-selection-background) !important",
   },
   // Remove specific color overrides since we handle these in CSS with ::selection
   // Using !important in the CSS ensures our selectors will take precedence
   ".cm-selectionMatch": {
-    backgroundColor: "rgba(114, 140, 211, 0.5)",
+    backgroundColor: "rgba(114, 140, 211, 0.5) !important",
   },
   "&.cm-focused .cm-cursor": {
     borderLeftColor: "#fff",

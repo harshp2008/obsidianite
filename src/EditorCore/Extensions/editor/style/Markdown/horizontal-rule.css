@@ -53,9 +53,7 @@
   /* This will combine with .cm-syntax-show */
   .App .cm-editor .cm-formatting.cm-formatting-hr {
     /* Ensure its color is consistent with your main text color */
-    color: var(
-      --editor-text-color
-    ); /* Should now be visible and light */
+    color: var(--editor-text-color); /* Should now be visible and light */
     /* Add any other specific styles for the '---' text when shown */
   }
   

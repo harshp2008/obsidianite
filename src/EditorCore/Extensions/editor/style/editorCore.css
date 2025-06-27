@@ -14,7 +14,7 @@
 
 /* General CodeMirror editor styles */
 .cm-editor {
-  background-color: #282c34; /* Your editor background */
+  background-color: var(--editor-bg); /* Your editor background */
   color: var(--editor-text-color);
   font-family: monospace;
 }
@@ -115,7 +115,7 @@
 .cm-syntax-show {
   display: inline-block !important; /* Forces visibility and ensures it takes up space in line */
   /* Restore default text color (your editor's main text color) */
-  color: var(--editor-text-color, #c9c9c9) !important;
+  color: var(--editor-text-color) !important;
   /* IMPORTANT: Remove any conflicting `opacity`, `position`, `width`, `height`, `overflow` rules here */
   background-color: transparent !important; /* Ensure no unwanted background */
 }
@@ -127,4 +127,13 @@
   border-left: 4px solid #61afef;
   padding-left: 1em;
   color: #abb2bf;
+}
+
+
+/* make selection overlay over the editor */
+
+.cm-selectionBackground {
+  background-color: var(--cm-selection-background) !important;
+  color: var(--cm-selection-text-color) !important;
+  opacity: 0.85 !important;
 }

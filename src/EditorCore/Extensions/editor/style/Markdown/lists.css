@@ -5,19 +5,16 @@
 
 /* Styles for the custom bullet '•' when inactive */
 .App .cm-editor .cm-custom-list-bullet {
-    color: var(--cm-list-bullet-inactive-color, #666);
-    font-weight: normal;
-    margin-right: 0.5ch;
-    vertical-align: middle;
+    color: var(--cm-inactive-color);
+    font-weight: var(--cm-list-bullet-font-weight);
+    margin-right: var(--cm-list-bullet-margin-right);
+    vertical-align: var(--cm-list-bullet-vertical-align);
   }
   
   /* Styles for the original list mark characters (e.g., '-', '+', '*') when active */
   /* This will also be affected by the .cm-syntax-show class from markdownSyntaxHiding */
   .App .cm-editor .cm-formatting.cm-formatting-list {
-    color: var(
-      --editor-text-color,
-      #c9c9c9
-    ); /* Ensures original bullet text color is white/light */
+    color: var(--editor-text-color); /* Ensures original bullet text color is white/light */
     padding: 0;
     margin: 0;
     display: inline-block; /* Essential to ensure it takes space when shown */

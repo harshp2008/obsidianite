@@ -9,10 +9,12 @@ import { SyntaxNode } from '@lezer/common';
  * - highlight + strong
  * - highlight + emphasis 
  * - highlight + strong + emphasis
+ * - mixed formatting within highlights
  */
 export const combinedHighlightExtension = StateField.define<DecorationSet>({
-  create() {
-    return Decoration.none;
+  create(state) {
+    // Initialize with decorations on editor creation
+    return buildCombinedHighlightDecorations(state);
   },
   update(decorations, tr) {
     if (!tr.docChanged && !tr.selection) return decorations;
@@ -24,103 +26,15 @@ export const combinedHighlightExtension = StateField.define<DecorationSet>({
 function buildCombinedHighlightDecorations(state: any): DecorationSet {
   const builder = new RangeSetBuilder<Decoration>();
   const tree = syntaxTree(state);
-
-  // Walk through the entire document
+  
+  // Process all highlight nodes in the document
   tree.iterate({
     enter: (nodeRef) => {
       const node = nodeRef.node;
       
-      // Check if this is a Highlight node
+      // First check for highlights that contain formatting
       if (node.type.name === 'Highlight') {
-        // Store information about whether this contains strong/emphasis formatting
-        let hasStrong = false;
-        let hasEmphasis = false;
-        
-        // Recursively check if this node contains strong or emphasis formatting
-        checkForFormatting(node);
-        
-        // Add the appropriate decoration based on the formatting found
-        if (hasStrong && hasEmphasis) {
-          builder.add(
-            node.from, 
-            node.to, 
-            Decoration.mark({ class: 'cm-highlight-strong-emphasis' })
-          );
-        } else if (hasStrong) {
-          builder.add(
-            node.from, 
-            node.to, 
-            Decoration.mark({ class: 'cm-highlight-strong' })
-          );
-        } else if (hasEmphasis) {
-          builder.add(
-            node.from, 
-            node.to, 
-            Decoration.mark({ class: 'cm-highlight-emphasis' })
-          );
-        }
-        
-        // Helper function to recursively check for formatting
-        function checkForFormatting(node: SyntaxNode) {
-          if (node.type.name === 'StrongEmphasis') {
-            hasStrong = true;
-            hasEmphasis = true;
-            return;
-          }
-          
-          if (node.type.name === 'Strong') {
-            hasStrong = true;
-          }
-          
-          if (node.type.name === 'Emphasis') {
-            hasEmphasis = true;
-          }
-          
-          // Check children recursively
-          let child = node.firstChild;
-          while (child) {
-            checkForFormatting(child);
-            child = child.nextSibling;
-          }
-        }
-      }
-      
-      // Check the inverse - Strong/Emphasis that contains Highlight
-      if (node.type.name === 'Strong' || node.type.name === 'Emphasis' || node.type.name === 'StrongEmphasis') {
-        let hasHighlight = false;
-        
-        // Check if this formatting contains a highlight
-        let child = node.firstChild;
-        while (child) {
-          if (child.type.name === 'Highlight' || containsHighlight(child)) {
-            hasHighlight = true;
-            break;
-          }
-          child = child.nextSibling;
-        }
-        
-        // Add appropriate decoration
-        if (hasHighlight) {
-          if (node.type.name === 'StrongEmphasis') {
-            builder.add(
-              node.from, 
-              node.to, 
-              Decoration.mark({ class: 'cm-highlight-strong-emphasis' })
-            );
-          } else if (node.type.name === 'Strong') {
-            builder.add(
-              node.from, 
-              node.to, 
-              Decoration.mark({ class: 'cm-highlight-strong' })
-            );
-          } else if (node.type.name === 'Emphasis') {
-            builder.add(
-              node.from, 
-              node.to, 
-              Decoration.mark({ class: 'cm-highlight-emphasis' })
-            );
-          }
-        }
+        processHighlightNode(node, builder, state.doc);
       }
     }
   });
@@ -128,19 +42,108 @@ function buildCombinedHighlightDecorations(state: any): DecorationSet {
   return builder.finish();
 }
 
-// Helper to check if a node contains a Highlight
-function containsHighlight(node: SyntaxNode): boolean {
-  if (node.type.name === 'Highlight') {
-    return true;
-  }
+// Process a highlight node to find formatting within it
+function processHighlightNode(highlightNode: SyntaxNode, builder: RangeSetBuilder<Decoration>, doc: any) {
+  // Add base decoration for the entire highlight
+  builder.add(
+    highlightNode.from,
+    highlightNode.to,
+    Decoration.mark({ class: 'cm-highlight' })
+  );
   
-  let child = node.firstChild;
+  let hasChildren = false;
+  
+  // Process each child node for formatting
+  let child = highlightNode.firstChild;
   while (child) {
-    if (containsHighlight(child)) {
-      return true;
+    // Check for formatting nodes within the highlight
+    if (child.type.name === 'Strong') {
+      hasChildren = true;
+      builder.add(
+        child.from,
+        child.to,
+        Decoration.mark({ class: 'cm-highlight-strong' })
+      );
+    } else if (child.type.name === 'Emphasis') {
+      hasChildren = true;
+      builder.add(
+        child.from,
+        child.to,
+        Decoration.mark({ class: 'cm-highlight-emphasis' })
+      );
+    } else if (child.type.name === 'StrongEmphasis') {
+      hasChildren = true;
+      builder.add(
+        child.from,
+        child.to,
+        Decoration.mark({ class: 'cm-highlight-strong-emphasis' })
+      );
+      
+      // Debug - examine the structure of StrongEmphasis
+      console.log('StrongEmphasis node:', {
+        from: child.from,
+        to: child.to,
+        name: child.type.name,
+        content: doc.sliceString(child.from, child.to)
+      });
     }
+    
+    // Recursively check children of this child for nested formatting
+    processNestedFormatting(child, builder, doc);
+    
     child = child.nextSibling;
   }
   
-  return false;
+  // If this highlight doesn't have any specially formatted children,
+  // we don't need to add additional decorations
+  if (!hasChildren) {
+    // The base cm-highlight class is already applied
+  }
+}
+
+// Process nested formatting recursively
+function processNestedFormatting(node: SyntaxNode, builder: RangeSetBuilder<Decoration>, doc: any) {
+  let child = node.firstChild;
+  while (child) {
+    if (child.type.name === 'Strong') {
+      builder.add(
+        child.from,
+        child.to,
+        Decoration.mark({ class: 'cm-highlight-strong' })
+      );
+    } else if (child.type.name === 'Emphasis') {
+      builder.add(
+        child.from,
+        child.to,
+        Decoration.mark({ class: 'cm-highlight-emphasis' })
+      );
+    } else if (child.type.name === 'StrongEmphasis') {
+      builder.add(
+        child.from,
+        child.to,
+        Decoration.mark({ class: 'cm-highlight-strong-emphasis' })
+      );
+    } else if (child.type.name === 'Highlight') {
+      // Also handle nested highlights
+      processHighlightNode(child, builder, doc);
+    }
+    
+    // Continue recursion
+    processNestedFormatting(child, builder, doc);
+    
+    child = child.nextSibling;
+  }
+}
+
+// Create a command to manually force refresh of the decorations
+export function refreshHighlightFormatting(view: EditorView) {
+  const state = view.state;
+  const decorations = buildCombinedHighlightDecorations(state);
+  
+  // Force refresh by temporarily changing something and then changing it back
+  view.dispatch({
+    effects: EditorView.scrollIntoView(0)
+  });
+  
+  return true;
 } 
