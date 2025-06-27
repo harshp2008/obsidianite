@@ -1,0 +1,61 @@
+@import '../constant.css';
+
+/* Base style for the visual HR widget */
+.App .cm-editor .cm-horizontal-rule-widget {
+    display: block; /* Ensures it takes up full width when visible */
+    border-bottom: 1.5px solid var(--cm-hr-color); /* Simple line style */
+    /* padding: calc((22.4px / 2 - 1.5px)/2) 0;  */ /* Adjust padding if needed, often handled by line-height */
+    height: 1.5px; /* Minimal height for the line itself */
+    background-color: transparent;
+    pointer-events: none; /* Ignore mouse events */
+    margin: 1em 0; /* Add vertical spacing around the HR */
+  }
+  
+  /* This class will be applied to the HR widget when the original markdown text should be visible */
+  .App .cm-editor .cm-horizontal-rule-widget-hidden {
+    display: none; /* Crucially hides the HR widget completely */
+  }
+  
+  /* Adjust line height for lines containing an HR widget to control vertical spacing */
+  /* This is a specific adjustment you had, keep if it's working for your layout */
+  .App .cm-editor .cm-line:has(.cm-horizontal-rule-widget) {
+    height: 22.4px; /* Ensure this line height matches your desired line height */
+    max-height: 22.4px;
+  }
+  
+  /* --- Horizontal Rule Specific Styles --- */
+  
+  /* Base style for the visual HR widget */
+  .App .cm-editor .cm-horizontal-rule-widget {
+    display: block; /* Ensures it takes up full width when visible */
+    border-bottom: 1.5px solid var(--cm-hr-color); /* Simple line style */
+    /* Remove padding from here if your line-height adjustment below handles vertical spacing */
+    /* padding: calc((22.4px / 2 - 1.5px)/2) 0; */
+    height: 1.5px; /* Minimal height for the line itself */
+    background-color: transparent;
+    pointer-events: none; /* Ignore mouse events */
+    margin: 1em 0; /* Add vertical spacing around the HR for proper line separation */
+  }
+  
+  /* This class will be applied to the HR widget when the original markdown text should be visible */
+  .App .cm-editor .cm-horizontal-rule-widget-hidden {
+    display: none !important; /* CRITICAL: Hides the HR widget completely, taking it out of flow */
+  }
+  
+  /* Adjust line height for lines containing an HR widget to control vertical spacing */
+  /* This is a specific adjustment you had, keep if it's working for your layout */
+  .App .cm-editor .cm-line:has(.cm-horizontal-rule-widget) {
+    height: 22.4px; /* Ensure this line height matches your desired line height */
+    max-height: 22.4px;
+  }
+  
+  /* Specific styling for HorizontalRule markdown characters when visible (e.g., the '---' text) */
+  /* This will combine with .cm-syntax-show */
+  .App .cm-editor .cm-formatting.cm-formatting-hr {
+    /* Ensure its color is consistent with your main text color */
+    color: var(
+      --editor-text-color
+    ); /* Should now be visible and light */
+    /* Add any other specific styles for the '---' text when shown */
+  }
+  

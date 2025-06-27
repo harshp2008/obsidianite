@@ -1,0 +1,130 @@
+/* Define your editor's main colors as CSS variables for easier management */
+@import './constant.css';
+
+@import './Markdown/text-styling.css';
+@import './Markdown/highlight.css';
+@import './Markdown/headings.css';
+
+@import './Markdown/lists.css';
+@import './Markdown/horizontal-rule.css';
+@import './Markdown/weblinks.css';
+
+@import './text-selections.css';
+
+
+/* General CodeMirror editor styles */
+.cm-editor {
+  background-color: #282c34; /* Your editor background */
+  color: var(--editor-text-color);
+  font-family: monospace;
+}
+
+/* --- General App Structure (Keep as is) --- */
+
+#root {
+  width: 100%;
+  height: calc(100vh - 40px);
+  background-color: #ffffff;
+  flex-grow: 1;
+  padding: 20px;
+}
+
+.App {
+  font-family: sans-serif;
+  color: #abb2bf;
+  background-color: #282c34;
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  height: 100%;
+}
+
+.app-header {
+  background-color: #21252b;
+  padding: 10px 20px;
+  border-bottom: 1px solid #3e4451;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.app-title {
+  margin: 0;
+  color: #e06c75;
+  font-size: 1.5em;
+}
+
+.log-button {
+  background-color: #61afef;
+  color: #282c34;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background-color 0.2s;
+}
+
+.log-button:hover {
+  background-color: #569cd6;
+}
+
+.editor-container {
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+/* --- CodeMirror Base Styles (Keep as is) --- */
+.App .cm-editor {
+  height: 100%;
+  outline: none;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.App .cm-editor .cm-content {
+  font-family: "Fira Code", "Cascadia Code", "Consolas", monospace;
+  font-size: 1em;
+  line-height: 1.4;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+/* General CodeMirror adjustments for better appearance with oneDark */
+.cm-scroller {
+  overflow-x: hidden;
+}
+.cm-content,
+.cm-line {
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+.App .cm-editor .cm-cursor {
+  border-left: 1.5px solid #528bff;
+}
+
+/* This class hides the original markdown text (e.g., '---', '##', '**') */
+/* It's applied by markdownSyntaxHiding when the marker is NOT active */
+.cm-syntax-hide {
+  display: none !important; /* Forces complete hiding, taking it out of document flow */
+  /* IMPORTANT: Remove any conflicting `opacity`, `position`, `width`, `height`, `overflow` rules here */
+}
+
+/* This class shows the original markdown text when the marker IS active */
+/* It's applied by markdownSyntaxHiding when the cursor/selection is on the line */
+.cm-syntax-show {
+  display: inline-block !important; /* Forces visibility and ensures it takes up space in line */
+  /* Restore default text color (your editor's main text color) */
+  color: var(--editor-text-color, #c9c9c9) !important;
+  /* IMPORTANT: Remove any conflicting `opacity`, `position`, `width`, `height`, `overflow` rules here */
+  background-color: transparent !important; /* Ensure no unwanted background */
+}
+
+
+/* Blockquote Styling */
+
+.App .cm-editor .cm-blockquote {
+  border-left: 4px solid #61afef;
+  padding-left: 1em;
+  color: #abb2bf;
+}

@@ -26,6 +26,7 @@ import { markdownLinkTransformation } from '../extensions/markdown/webLinks/mark
 import { markdownSyntaxHiding } from '../extensions/markdown/syntaxHiding/snytaxHidingPlugin';
 import { listBulletExtension } from '../extensions/markdown/list/markdownListBulletExtension';
 import { markdownHighlightExtension, highlightTags } from '../extensions/markdown/highlight/markdownHighlightExtension';
+import { combinedHighlightExtension } from '../extensions/markdown/highlight/combinedHighlightExtension';
 import { horizontalRuleExtension } from '../extensions/markdown/horizontalRule/horizontalRuleExtension';
 
 import { markdownBracketCompletion } from './closeBracketsConfig';
@@ -36,6 +37,10 @@ export const initialContent = `## My Markdown Doc
 This is some **bold** text and *italic* text.
 
 ==highlight==
+**==strong highlight==**
+*==emphasis highlight==*
+***==strong emphasis highlight==***
+
 ~~strikethrough~~
 \`inline code\`
 
@@ -133,6 +138,7 @@ export const markdownExtensions: Extension[] = [
   markdownSyntaxHiding,
   listBulletExtension,
   horizontalRuleExtension,
+  combinedHighlightExtension, // Add our new combined highlight extension
 
   markdownBracketCompletion // Add auto bracket insertion
 

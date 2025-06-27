@@ -1,0 +1,35 @@
+/* Default text selection */
+.cm-editor .cm-selectionBackground {
+    background-color: var(--cm-selection-background) !important;
+    opacity: 0.85 !important; /* Ensure good visibility */
+  }
+  
+  /* Improve selection visibility with pseudo-elements */
+  .cm-editor ::selection {
+    background-color: var(--cm-selection-background) !important;
+    color: white !important;
+  }
+  
+  /* Make widget selection more visible */
+  .cm-editor .cm-widgetBuffer::selection,
+  .cm-editor .cm-widgetBuffer *::selection {
+    background-color: rgba(60, 76, 114, 0.9) !important;
+  }
+  
+  /* Fix z-index issues for decorations and widgets during selection */
+  .cm-editor .cm-line > * {
+    position: relative; /* Ensure proper stacking context */
+  }
+  
+  /* Ensure selection is always visible above decoration widgets */
+  .cm-editor .cm-selectionLayer {
+    z-index: 100 !important; /* Boost selection layer above decorations */
+  }
+  
+  
+  /* Fix for selection rendering with replacement decorations */
+  .App .cm-editor .cm-content .cm-selectionBackground {
+    mix-blend-mode: multiply; /* This helps the selection stand out on colored backgrounds */
+  }
+  
+  

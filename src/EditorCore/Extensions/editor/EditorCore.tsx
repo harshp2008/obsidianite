@@ -12,7 +12,7 @@ import {
 } from './editor_constants'; // Import constants and extensions from the new file
 
 // Import the necessary styles
-import './editorCore.css';
+import './style/editorCore.css';
 
 
 interface EditorCoreProps {
