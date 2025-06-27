@@ -1,8 +1,15 @@
 :root {
+
+  --editor-width: 100%;
+  --editor-max-width: 600px;
+
+
   /* Editor and Basic Colors */
   --editor-bg: hsl(28, 19%, 15%);
   --editor-text-color: hsl(34, 38%, 79%); /* Your main editor text color (e.g., from your screenshots) */
   --cm-inactive-color: hsl(0, 0%, 40%); /* Color for the inactive list bullet */
+
+
 
   --line-spacing: 4px;
 

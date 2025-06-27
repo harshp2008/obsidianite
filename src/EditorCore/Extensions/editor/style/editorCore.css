@@ -78,8 +78,7 @@
 .App .cm-editor {
   height: 100%;
   outline: none;
-  padding-left: 20px;
-  padding-right: 20px;
+
 }
 
 .App .cm-editor .cm-content {
@@ -90,15 +89,18 @@
   padding-bottom: 20px;
 }
 
-/* General CodeMirror adjustments for better appearance with oneDark */
-.cm-scroller {
+
+div.cm-scroller {
   overflow-x: hidden;
+  
+  padding-left: 20px;
+  padding-right: 20px;
+  width: 100%;
+  max-width:  calc(--editor-max-width + 40px);
+
 }
-.cm-content,
-.cm-line {
-  word-wrap: break-word;
-  white-space: pre-wrap;
-}
+
+
 .App .cm-editor .cm-cursor {
   border-left: 1.5px solid #528bff;
 }
