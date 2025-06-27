@@ -123,7 +123,9 @@ export const basicExtensions: Extension[] = [
   rectangularSelection(),
   crosshairCursor(),
   highlightActiveLineGutter(),
-
+  
+  // Enable line wrapping
+  EditorView.lineWrapping,
 ];
 
 // All Markdown and language-specific extensions, plus custom extensions

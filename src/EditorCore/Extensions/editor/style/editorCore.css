@@ -1,16 +1,15 @@
 /* Define your editor's main colors as CSS variables for easier management */
-@import './constant.css';
+@import "./constant.css";
 
-@import './Markdown/text-styling.css';
-@import './Markdown/highlight.css';
-@import './Markdown/headings.css';
+@import "./Markdown/text-styling.css";
+@import "./Markdown/highlight.css";
+@import "./Markdown/headings.css";
 
-@import './Markdown/lists.css';
-@import './Markdown/horizontal-rule.css';
-@import './Markdown/weblinks.css';
+@import "./Markdown/lists.css";
+@import "./Markdown/horizontal-rule.css";
+@import "./Markdown/weblinks.css";
 
-@import './text-selections.css';
-
+@import "./text-selections.css";
 
 /* General CodeMirror editor styles */
 .cm-editor {
@@ -37,6 +36,7 @@
   flex-direction: column;
   max-width: 100%;
   height: 100%;
+  position: relative; /* Ensure proper positioning context */
 }
 
 .app-header {
@@ -72,13 +72,13 @@
 .editor-container {
   flex-grow: 1;
   overflow: hidden;
+  position: relative; /* Ensure proper positioning context */
 }
 
 /* --- CodeMirror Base Styles (Keep as is) --- */
 .App .cm-editor {
   height: 100%;
   outline: none;
-
 }
 
 .App .cm-editor .cm-content {
@@ -87,19 +87,55 @@
   line-height: calc(1.17em + var(--line-spacing) + 0.1em);
   padding-top: 20px;
   padding-bottom: 20px;
+  width: 100%;
+  max-width: var(--editor-max-width);
+  margin: 0 auto; /* Center the content if less than max-width */
 }
 
-
-div.cm-scroller {
+/* Scrollbar styling */
+.App .cm-scroller {
   overflow-x: hidden;
-  
   padding-left: 20px;
   padding-right: 20px;
   width: 100%;
-  max-width:  calc(--editor-max-width + 40px);
-
+  box-sizing: border-box; /* Include padding in width calculation */
+  position: relative; /* For positioning the scrollbar */
 }
 
+/* Lock scrollbar to the right edge */
+.App .cm-scroller::-webkit-scrollbar {
+  width: 10px; /* Width of the scrollbar */
+  position: absolute;
+  right: 0;
+}
+
+.App .cm-scroller::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.App .cm-scroller::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 5px;
+}
+
+.App .cm-scroller::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* For Firefox */
+.App .cm-scroller {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.1);
+}
+
+/* Line wrapping styling */
+.App .cm-line {
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: var(--editor-max-width);
+  width: 100%;
+  box-sizing: border-box;
+}
 
 .App .cm-editor .cm-cursor {
   border-left: 1.5px solid #528bff;
@@ -122,7 +158,6 @@ div.cm-scroller {
   background-color: transparent !important; /* Ensure no unwanted background */
 }
 
-
 /* Blockquote Styling */
 
 .App .cm-editor .cm-blockquote {
@@ -130,7 +165,6 @@ div.cm-scroller {
   padding-left: 1em;
   color: #abb2bf;
 }
-
 
 /* make selection overlay over the editor */
 
