@@ -66,8 +66,8 @@ function createListBulletDecorations(state: EditorState): DecorationSet {
 
         // --- Ordered Lists: Always show the original number ---
         if (parentListNode.type.name === 'OrderedList') {
-            // For ordered lists, this extension does nothing.
-            // The original '1.', '2.' etc. should always be visible by default.
+            // For ordered lists, add a class for styling
+            decorations.push(Decoration.mark({ class: 'cm-ordered-list-mark' }).range(listMarkFrom, listMarkTo));
             return;
         }
 

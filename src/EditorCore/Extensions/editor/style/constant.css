@@ -1,16 +1,16 @@
 :root {
-
   /* Editor and Basic Colors */
   --editor-bg: hsl(28, 19%, 15%);
-  --editor-text-color: hsl(33, 39%, 79%); /* Your main editor text color (e.g., from your screenshots) */
+  --editor-text-color: hsl(34, 38%, 79%); /* Your main editor text color (e.g., from your screenshots) */
   --cm-inactive-color: hsl(0, 0%, 40%); /* Color for the inactive list bullet */
 
+  --line-spacing: 0.5em;
 
   /*  Headings */
-  --cm-header-color: hsl(32, 48%, 85%); 
+  --cm-header-color: hsl(32, 48%, 85%);
   --cm-header-bg: hsla(0, 0, 0, 0);
   --cm-header-font-weight: bold;
-  --cm-header-padding: 0.5em  0em;
+  --cm-header-padding: 0.5em 0em;
 
   --cm-h1-size: 2.2em; /* Color for the header 1 */
   --cm-h2-size: 1.8em; /* Color for the header 2 */
@@ -22,35 +22,39 @@
   /* Text Styling */
   --cm-strong-color: hsl(286, 60%, 67%);
   --cm-emphasis-color: hsl(39, 67%, 69%);
+
   --cm-strikethrough-color: hsl(0, 0%, 50%);
+  --cm-strikethrough-selection-bg: hsla(339, 23%, 25%, 0.85);
+  --cm-strikethrough-selection-color: hsl(0, 0%, 100%);
 
-  --cm-strikethrough-selection-bg: hsla(339, 23%, 25%, 0.85); /* Selection in strikethrough text */
-
-  --cm-inline-code-color: hsl(240, 26%, 37%);
-  --cm-inline-code-bg: hsl(240, 26%, 37%);
-  --cm-inline-code-border: hsl(240, 26%, 37%);
-  --cm-inline-code-border-radius: 0.2em;
-
+  --cm-inline-code-color: hsla(4, 91%, 67%, 1);
+  --cm-inline-code-bg: hsla(24, 18%, 11%, 1);
+  --cm-inline-code-border-radius: 4px;
 
   /* Horizontal Rule */
   --cm-hr-color: hsl(0, 0%, 85%); /* Color for the horizontal rule line */
-  
-  /* Lists */
-  --cm-list-bullet-color: hsl(0, 0%, 40%); /* Color for the list bullet */
-  --cm-list-bullet-font-weight: normal; /* Font weight for the list bullet */
+
+  /* Unordered Lists */
+  --cm-list-bullet-color: hsl(34, 24%, 46%); /* Color for the list bullet */
+  --cm-list-bullet-font-weight: bold; /* Font weight for the list bullet */
   --cm-list-bullet-margin-right: 0.5ch; /* Margin right for the list bullet */
   --cm-list-bullet-vertical-align: middle; /* Vertical alignment for the list bullet */
+
+  /* Ordered Lists */
+  --cm-ordered-list-mark-color: hsl(34, 24%, 46%); /* Color for ordered list markers (1., 2., etc.) */
+  --cm-ordered-list-mark-font-weight: bold; /* Font weight for ordered list markers */
+  --cm-ordered-list-mark-margin-right: 0ch; /* Margin right for ordered list markers */
+  --cm-ordered-list-mark-vertical-align: middle; /* Vertical alignment for ordered list markers */
 
   /* Web Links */
   --cm-empty-link-color: hsl(0, 0%, 53%); /* Color for empty links */
   --cm-link-color: hsl(188, 100%, 45%); /* Default link color */
   --cm-link-visited-color: hsl(275, 35%, 65%); /* Visited link color */
   --cm-link-hover-color: hsl(47, 80%, 46%); /* Link hover color */
-  --cm-link-edit-bg : hsla(220, 100%, 66%, 0.2);
+  --cm-link-edit-bg: hsla(220, 100%, 66%, 0.2);
 
   --cm-link-selection-bg: rgba(255, 255, 255, 0.85);
   --cm-link-selection-color: hsl(0, 0%, 100%);
-
 
   /* Selection color variables */
   --cm-selection-background: hsla(32, 20%, 50%, 0.6); /* Default selection background */
@@ -58,20 +62,19 @@
   --cm-highlight-selection-bg: hsla(227, 55%, 39%, 0.85); /* Selection in highlight elements */
   --cm-code-selection-bg: hsla(240, 26%, 37%, 0.85); /* Selection in code blocks */
   --cm-strikethrough-selection-bg: hsla(339, 23%, 25%, 0.85); /* Selection in strikethrough text */
-  
 
   /* Highlight colors variables */
-  --cm-highlight-bg: hsla(60, 100%, 50%, 0.175); /* Regular highlight background - olive/gold */
-  --cm-highlight-color:--editor-text-color; /* Regular highlight text color */
+  --cm-highlight-bg: hsla(60, 100%, 50%, 20%); /* Regular highlight background - olive/gold */
+  --cm-highlight-color: --editor-text-color; /* Regular highlight text color */
 
-  --cm-strong-highlight-bg: hsla(348, 100%, 50%, 0.175); /* Strong highlight background - maroon/burgundy */
+  --cm-strong-highlight-bg: hsla(0, 84%, 63% , 20%); /* Strong highlight background - maroon/burgundy */
   --cm-strong-highlight-color: --editor-text-color; /* Strong highlight text color */
 
-  --cm-emphasis-highlight-bg: hsla(194, 59%, 56%, 0.175); /* Emphasis highlight background - teal/blue-green */
+  --cm-emphasis-highlight-bg: hsla(180, 64%, 46%, 20%); /* Emphasis highlight background - teal/blue-green */
   --cm-emphasis-highlight-color: --editor-text-color; /* Emphasis highlight text color */
 
   --cm-strong-emphasis-highlight-bg: hsla(143, 100%, 50%, 0.175); /* Strong+Emphasis highlight - similar to emphasis */
-  --cm-strong-emphasis-highlight-color: hsl(0, 0%, 100%); /* Strong+Emphasis highlight text color */
+  --cm-strong-emphasis-highlight-color: hsl(34, 38%, 95%); /* Strong+Emphasis highlight text color */
 }
 
 /*  cm-strong ͼx cm-highlight */

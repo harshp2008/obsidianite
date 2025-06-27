@@ -85,7 +85,7 @@
 .App .cm-editor .cm-content {
   font-family: "Fira Code", "Cascadia Code", "Consolas", monospace;
   font-size: 1em;
-  line-height: 1.4;
+  line-height: calc(1.17em + var(--line-spacing) + 0.1em);
   padding-top: 20px;
   padding-bottom: 20px;
 }

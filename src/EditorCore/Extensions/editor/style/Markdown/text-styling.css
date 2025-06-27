@@ -27,7 +27,7 @@
 .cm-editor .cm-strikethrough::selection,
 .cm-editor .cm-strikethrough *::selection {
   background-color: var(--cm-strikethrough-selection-bg) !important;
-  color: #e0e0e0 !important;
+  color: var(--cm-strikethrough-selection-color) !important;
 }
 
 
@@ -36,12 +36,14 @@
 
 .App .cm-editor .cm-inline-code {
   font-family: "Fira Code", "Cascadia Code", "Consolas", monospace;
-  background-color: rgba(126, 140, 168, 0.5);
-  color: #98c379;
+  background-color: var(--cm-inline-code-bg);
+  color: var(--cm-inline-code-color);
   padding: 0px 2px;
   border-radius: 3px;
   line-height: 1.4;
 }
+
+
 
 /* Selection styling for inline code */
 

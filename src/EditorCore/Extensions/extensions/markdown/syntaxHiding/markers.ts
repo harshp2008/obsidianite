@@ -1,4 +1,3 @@
-// src/extensions/markdownSyntaxHiding/markers.ts
 
 export const HIDEABLE_MARK_NAMES = new Set([
   'StrongMark',       // **
@@ -11,8 +10,6 @@ export const HIDEABLE_MARK_NAMES = new Set([
   //'ListMark',         // - or 1. This is now handled in extension/markdownListBulletExtension.ts
   'HorizontalRule',   // ---
   
-  // Potentially add LinkMark if you decide to hide individual link brackets here,
-  // but markdownLinkTransformation handles full link hiding.
 ]);
 
 // These are the *parent* nodes whose selection should reveal their child markers.
