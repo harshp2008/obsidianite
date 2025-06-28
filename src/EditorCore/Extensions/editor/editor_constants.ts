@@ -32,7 +32,6 @@ import { listExtensions } from '../extensions/markdown/list';
 import { markdownBracketCompletion } from './closeBracketsConfig';
 
 import { indentWithTab } from '@codemirror/commands';
-import { markdownStructuralClassesExtension } from '../extensions/markdown/markdownStructuralClassesExtension';
 
 // Initial content for the editor
 export const initialContent = `## My Markdown Doc
@@ -159,7 +158,7 @@ export const markdownExtensions: Extension[] = [
   ...listExtensions, // Add our new list extensions
 
   markdownBracketCompletion, // Add auto bracket insertion
-  markdownStructuralClassesExtension
+
 ];
 
 // Combine all extensions

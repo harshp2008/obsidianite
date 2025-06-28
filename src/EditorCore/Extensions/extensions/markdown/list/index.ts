@@ -5,6 +5,7 @@ import { listBulletExtension } from './listBullet/listBulletExtension';
 import { listIndentationExtension, setIndentSize } from './indentation/listIndentationExtension';
 import { rigidIndentationExtension } from './indentation/rigidIndentationExtension';
 import { lineGuideExtension } from './indentation/lineGuideExtension';
+import { markdownStructuralClassesExtension } from './markdownStructuralClassesExtension';
 
 // Log that our extensions are being loaded
 console.log("Loading list extensions...");
@@ -22,7 +23,9 @@ export const listExtensions: Extension[] = [
   ...listIndentationExtension,
   ...rigidIndentationExtension,
   //...lineGuideExtension,
-  listDebugExtension
+  listDebugExtension,
+
+  markdownStructuralClassesExtension
 ];
 
 console.log("List extensions loaded:", listExtensions);

@@ -79,13 +79,6 @@ function processHighlightNode(highlightNode: SyntaxNode, builder: RangeSetBuilde
         Decoration.mark({ class: 'cm-highlight-strong-emphasis' })
       );
       
-      // Debug - examine the structure of StrongEmphasis
-      console.log('StrongEmphasis node:', {
-        from: child.from,
-        to: child.to,
-        name: child.type.name,
-        content: doc.sliceString(child.from, child.to)
-      });
     }
     
     // Recursively check children of this child for nested formatting
