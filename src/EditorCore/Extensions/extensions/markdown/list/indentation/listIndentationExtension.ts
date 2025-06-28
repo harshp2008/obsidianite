@@ -6,7 +6,7 @@ import { indentUnit } from '@codemirror/language';
 export const setIndentSizeEffect = StateEffect.define<number>();
 
 // Default indentation size (8 spaces by default as requested)
-const DEFAULT_INDENT_SIZE = 5;
+const DEFAULT_INDENT_SIZE = 4;
 // Log to console that we're using 8-space indentation
 console.log("Setting up list indentation with 8-space indent");
 

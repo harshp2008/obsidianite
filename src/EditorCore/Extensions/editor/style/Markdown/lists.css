@@ -48,91 +48,10 @@
   overflow: hidden !important;
 }
 
-/* --- Indentation Guides --- */
-/* Base styles for indent guides */
-.App .cm-editor .cm-indent-guide {
-  position: absolute;
-  width: 1px;
-  background-color: rgba(255, 255, 255, 0.1);
-  pointer-events: none;
-  z-index: 1;
+[class^="cm-indent-guide-line-level-"] > span:first-of-type  {
+  padding-left: 5px !important;
+  border-left: 1px solid #000 !important;
 }
 
-/* Different colors for different levels */
-.App .cm-editor .cm-indent-guide-level-1 {
-  background-color: rgba(120, 160, 255, 0.1);
-}
 
-.App .cm-editor .cm-indent-guide-level-2 {
-  background-color: rgba(180, 140, 255, 0.1);
-}
 
-.App .cm-editor .cm-indent-guide-level-3 {
-  background-color: rgba(255, 150, 100, 0.1);
-}
-
-.App .cm-editor .cm-indent-guide-level-4 {
-  background-color: rgba(120, 220, 160, 0.1);
-}
-
-/* Adjust indentation guide positions based on indent size from constants */
-:root {
-  --indent-size: 8ch; /* Default, will be overridden by JavaScript */
-  --indent-visual-size: 32px; /* Larger visual indentation */
-}
-
-/* Increase the visual size of indentation */
-.App .cm-editor .cm-line {
-  padding-left: 0; /* Reset padding */
-  text-indent: 0; /* Reset text indent */
-}
-
-/* Style visual indentation with colored indicators */
-.App .cm-editor .cm-line:has(.cm-list-bullet) {
-  padding-left: 0;
-  position: relative;
-}
-
-/* Special styling for indented lines */
-.App .cm-editor .cm-indent-guide-line-level-1 {
-  border-left: 3px solid rgba(50, 200, 50, 0.4); /* Bright green for first level */
-  padding-left: var(--indent-visual-size);
-  position: relative;
-}
-
-.App .cm-editor .cm-indent-guide-line-level-2 {
-  border-left: 3px solid rgba(50, 180, 200, 0.5); /* Teal for second level */
-  padding-left: calc(var(--indent-visual-size) * 2);
-  position: relative;
-}
-
-.App .cm-editor .cm-indent-guide-line-level-3 {
-  border-left: 3px solid rgba(80, 100, 240, 0.5); /* Blue for third level */
-  padding-left: calc(var(--indent-visual-size) * 3);
-  position: relative;
-}
-
-.App .cm-editor .cm-indent-guide-line-level-4 {
-  border-left: 3px solid rgba(180, 50, 220, 0.5); /* Purple for fourth level */
-  padding-left: calc(var(--indent-visual-size) * 4);
-  position: relative;
-}
-
-/* Add ruler markers to make indentation spacing visible */
-.App .cm-editor .cm-line::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 100%;
-  background-image: repeating-linear-gradient(
-    90deg,
-    transparent,
-    transparent calc(var(--indent-size) - 1px),
-    rgba(127, 127, 127, 0.03) calc(var(--indent-size) - 1px),
-    rgba(127, 127, 127, 0.03) var(--indent-size)
-  );
-  z-index: 0;
-  pointer-events: none;
-}

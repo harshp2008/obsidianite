@@ -21,7 +21,7 @@ export const listExtensions: Extension[] = [
   listBulletExtension,
   ...listIndentationExtension,
   ...rigidIndentationExtension,
-  ...lineGuideExtension,
+  //...lineGuideExtension,
   listDebugExtension
 ];
 
