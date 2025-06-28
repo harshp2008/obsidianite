@@ -1,3 +1,5 @@
+//src\EditorCore\Extensions\extensions\markdown\list\indentation\listIndentationExtension.ts
+
 import { keymap, EditorView } from '@codemirror/view';
 import { StateField, StateEffect } from '@codemirror/state';
 import { indentUnit } from '@codemirror/language';
@@ -5,10 +7,8 @@ import { indentUnit } from '@codemirror/language';
 // Create a configurable effect for changing indent size
 export const setIndentSizeEffect = StateEffect.define<number>();
 
-// Default indentation size (8 spaces by default as requested)
-const DEFAULT_INDENT_SIZE = 4;
-// Log to console that we're using 8-space indentation
-console.log("Setting up list indentation with 8-space indent");
+
+const DEFAULT_INDENT_SIZE = 5;
 
 // Create a state field to store indentation configuration
 export const indentationConfig = StateField.define<{

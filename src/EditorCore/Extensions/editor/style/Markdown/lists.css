@@ -48,10 +48,4 @@
   overflow: hidden !important;
 }
 
-[class^="cm-indent-guide-line-level-"] > span:first-of-type  {
-  padding-left: 5px !important;
-  border-left: 1px solid #000 !important;
-}
-
-
 

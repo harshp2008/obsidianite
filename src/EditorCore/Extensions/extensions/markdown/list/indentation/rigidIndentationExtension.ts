@@ -1,218 +1,83 @@
-import { EditorView, ViewPlugin, keymap, ViewUpdate } from '@codemirror/view';
-import { indentationConfig } from './listIndentationExtension';
+// src\EditorCore\Extensions\extensions\markdown\list\indentation\rigidIndentationExtension.ts
+
+import { EditorState, StateField, Range } from '@codemirror/state';
+import { EditorView, Decoration, DecorationSet } from '@codemirror/view'; // Removed ViewPlugin, ViewUpdate as they are unused
+import { syntaxTree } from '@codemirror/language';
+import { indentationConfig, setIndentSizeEffect } from './listIndentationExtension';
+
 
 /**
- * Check if a line has a list marker (either at the start or indented)
+ * Function to build the set of ranges that should be treated as atomic for indentation.
+ * These are *not* visual decorations, but logical ranges for cursor movement.
  */
-function isListLine(text: string): boolean {
-  return /^\s*[-*+]|\s*\d+\./.test(text);
-}
-
-/**
- * Count leading spaces in a line
- */
-function countLeadingSpaces(text: string): number {
-  let count = 0;
-  for (let i = 0; i < text.length; i++) {
-    if (text[i] === ' ') {
-      count++;
-    } else {
-      break;
-    }
-  }
-  return count;
-}
-
-/**
- * Check if cursor is in the indentation area of a line
- */
-function isInIndentArea(line: string, cursorOffset: number): boolean {
-  const leadingSpaces = countLeadingSpaces(line);
-  return cursorOffset <= leadingSpaces;
-}
-
-/**
- * Get the next valid tab stop position
- */
-function getNextTabStop(cursorOffset: number, indentSize: number, maxSpaces: number): number {
-  // Calculate next tab stop position
-  let nextStop = Math.ceil(cursorOffset / indentSize) * indentSize;
-  
-  // If we're already at a tab stop, move to the next one
-  if (nextStop === cursorOffset) {
-    nextStop += indentSize;
-  }
-  
-  // Don't go beyond the leading spaces
-  return Math.min(nextStop, maxSpaces);
-}
-
-/**
- * Get the previous valid tab stop position
- */
-function getPrevTabStop(cursorOffset: number, indentSize: number): number {
-  // If at beginning of line, stay there
-  if (cursorOffset === 0) {
-    return 0;
-  }
-  
-  // If exactly at a tab stop, go to previous one
-  if (cursorOffset % indentSize === 0) {
-    return Math.max(0, cursorOffset - indentSize);
-  }
-  
-  // Otherwise go to the current tab stop
-  return Math.floor(cursorOffset / indentSize) * indentSize;
-}
-
-/**
- * Handle horizontal arrow key navigation within indentation areas
- */
-function handleArrowNavigation(view: EditorView, key: string): boolean {
-  const { state } = view;
-  const { selection } = state;
-  
-  // Only handle single cursor (not selection)
-  if (selection.ranges.length !== 1 || !selection.main.empty) {
-    return false;
-  }
-  
-  const cursorPos = selection.main.head;
-  const line = state.doc.lineAt(cursorPos);
-  const offsetInLine = cursorPos - line.from;
+function buildAtomicIndentRanges(state: EditorState): DecorationSet {
+  const ranges: Array<Range<Decoration>> = []; // We will collect Range objects here
+  const tree = syntaxTree(state);
   const indentSize = state.field(indentationConfig).indentSize;
-  
-  // Only handle list lines
-  if (!isListLine(line.text)) {
-    return false;
-  }
-  
-  // Only handle if in indentation area
-  if (!isInIndentArea(line.text, offsetInLine)) {
-    return false;
-  }
-  
-  // Get leading spaces
-  const leadingSpaces = countLeadingSpaces(line.text);
-  
-  if (key === 'ArrowLeft') {
-    // Move to previous tab stop
-    const newPos = getPrevTabStop(offsetInLine, indentSize);
-    if (newPos !== offsetInLine) {
-      view.dispatch({
-        selection: { anchor: line.from + newPos },
-        scrollIntoView: true
-      });
-      return true;
+
+  // Create a single, non-visual Decoration instance to be used as the value for all atomic ranges.
+  // Decoration.mark({}) creates a Decoration instance that can have .range() called on it,
+  // and by default, it doesn't apply any visual styles unless a 'class' or other spec is given.
+  const atomicPlaceholderDecoration = Decoration.mark({});
+
+  tree.iterate({
+    from: 0,
+    to: state.doc.length,
+    enter: (nodeRef) => {
+      const { node } = nodeRef;
+
+      if (node.type.name === 'ListItem') {
+        const line = state.doc.lineAt(node.from);
+        const listMarkNode = node.getChild('ListMark');
+
+        if (!listMarkNode) {
+          return;
+        }
+
+        const leadingSpacesBeforeMark = listMarkNode.from - line.from;
+
+        if (leadingSpacesBeforeMark > 0) {
+          for (let i = 0; i < leadingSpacesBeforeMark; i += indentSize) {
+            const from = line.from + i;
+            const to = Math.min(line.from + i + indentSize, listMarkNode.from);
+
+            if (from < to) {
+              // Now, we correctly call .range(from, to) on an actual Decoration instance.
+              ranges.push(atomicPlaceholderDecoration.range(from, to));
+            }
+          }
+        }
+      }
     }
-  } else if (key === 'ArrowRight') {
-    // Move to next tab stop
-    const newPos = getNextTabStop(offsetInLine, indentSize, leadingSpaces);
-    if (newPos !== offsetInLine) {
-      view.dispatch({
-        selection: { anchor: line.from + newPos },
-        scrollIntoView: true
-      });
-      return true;
-    }
-  }
-  
-  return false;
+  });
+
+  // Return a DecorationSet from the collected ranges
+  return Decoration.set(ranges, true); // `true` to ensure ranges are sorted
 }
 
-/**
- * DOM event handler for arrow keys
- */
-const arrowKeyHandler = EditorView.domEventHandlers({
-  keydown: (event, view) => {
-    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-      // Don't handle if modifier keys are pressed
-      if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) {
-        return false;
-      }
-      
-      if (handleArrowNavigation(view, event.key)) {
-        event.preventDefault();
-        return true;
-      }
-    }
-    return false;
-  }
-});
-
-/**
- * High-priority keymap for arrow keys
- */
-const arrowKeymap = keymap.of([
-  { 
-    key: 'ArrowLeft', 
-    run: view => handleArrowNavigation(view, 'ArrowLeft'),
-    shift: view => handleArrowNavigation(view, 'ArrowLeft'),
-    preventDefault: true
+// This field will hold the DecorationSet of atomic ranges.
+export const atomicIndentRanges = StateField.define<DecorationSet>({
+  create(state) {
+    return buildAtomicIndentRanges(state);
   },
-  { 
-    key: 'ArrowRight', 
-    run: view => handleArrowNavigation(view, 'ArrowRight'),
-    shift: view => handleArrowNavigation(view, 'ArrowRight'),
-    preventDefault: true
-  }
-]); // Higher priority than default
-
-/**
- * ViewPlugin that handles mouse clicks in indentation areas
- */
-const clickHandler = ViewPlugin.fromClass(class {
-  constructor(_view: EditorView) {}
-  
-  update(update: ViewUpdate) {
-    // Only handle selection changes from mouse clicks
-    if (!update.selectionSet || !update.transactions.some((tr: any) => tr.isUserEvent('select.pointer'))) {
-      return;
+  update(value, transaction) {
+    // Only rebuild if doc changes or indent size changes
+    if (transaction.docChanged || transaction.effects.some(e => e.is(setIndentSizeEffect))) {
+      return buildAtomicIndentRanges(transaction.state);
     }
-    
-    const { state } = update.view;
-    const { selection } = state;
-    
-    // Only handle single cursor (not selection)
-    if (selection.ranges.length !== 1 || !selection.main.empty) {
-      return;
-    }
-    
-    const cursorPos = selection.main.head;
-    const line = state.doc.lineAt(cursorPos);
-    const offsetInLine = cursorPos - line.from;
-    const indentSize = state.field(indentationConfig).indentSize;
-    
-    // Only handle list lines
-    if (!isListLine(line.text)) {
-      return;
-    }
-    
-    // Only handle if in indentation area
-    if (!isInIndentArea(line.text, offsetInLine)) {
-      return;
-    }
-    
-    // Find nearest tab stop
-    const roundedPos = Math.round(offsetInLine / indentSize) * indentSize;
-    const leadingSpaces = countLeadingSpaces(line.text);
-    const snapPos = Math.min(roundedPos, leadingSpaces);
-    
-    // Only dispatch if we're not already at that position
-    if (snapPos !== offsetInLine) {
-      setTimeout(() => {
-        update.view.dispatch({
-          selection: { anchor: line.from + snapPos },
-          scrollIntoView: true
-        });
-      }, 0);
-    }
-  }
+    // Efficiently map existing ranges to new document positions
+    return value.map(transaction.changes);
+  },
+  // Provide a function that extracts the DecorationSet from this StateField
+  // This aligns with how EditorView.atomicRanges.of expects its argument.
+  provide: (field) => EditorView.atomicRanges.of(view => {
+    // Access the current value of this StateField within the view's state
+    return view.state.field(field);
+  }),
 });
+
 
 // Export the rigid indentation extension
 export const rigidIndentationExtension = [
-  arrowKeyHandler,
-  arrowKeymap,
-  clickHandler
-]; 
+  atomicIndentRanges,
+];  
