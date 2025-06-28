@@ -27,6 +27,7 @@ import { markdownSyntaxHiding } from '../extensions/markdown/syntaxHiding/snytax
 import { markdownHighlightExtension, highlightTags } from '../extensions/markdown/highlight/markdownHighlightExtension';
 import { combinedHighlightExtension } from '../extensions/markdown/highlight/combinedHighlightExtension';
 import { horizontalRuleExtension } from '../extensions/markdown/horizontalRule/horizontalRuleExtension';
+import { listExtensions } from '../extensions/markdown/list';
 
 import { markdownBracketCompletion } from './closeBracketsConfig';
 
@@ -54,16 +55,16 @@ const x = 10;
 
 1. Ordered item 1
 2. Ordered item 2
-   1. Nested ordered item 1
-   2. Nested ordered item 2
-      1. Deeply nested item
+     1. Nested ordered item 1
+     2. Nested ordered item 2
+          1. Deeply nested item
 
 - List item 1
 - List item 2
-  - Nested list item
-    - Deeply nested item
-    - Another deeply nested item
-  - Back to level 2
+     - Nested list item
+          - Deeply nested item
+          - Another deeply nested item
+     - Back to level 2
 - Back to level 1
 
 > A blockquote
@@ -149,6 +150,7 @@ export const markdownExtensions: Extension[] = [
   markdownSyntaxHiding,
   horizontalRuleExtension,
   combinedHighlightExtension, // Add our new combined highlight extension
+  ...listExtensions, // Add our new list extensions
 
   markdownBracketCompletion // Add auto bracket insertion
 
