@@ -25,6 +25,7 @@ import { oneDark } from '@codemirror/theme-one-dark';
 import { markdownLinkTransformation } from '../extensions/markdown/webLinks/markdownLinkTransformation';
 import { markdownSyntaxHiding } from '../extensions/markdown/syntaxHiding/snytaxHidingPlugin';
 import { listBulletExtension } from '../extensions/markdown/list/markdownListBulletExtension';
+import { listIndentationExtension } from '../extensions/markdown/list/listIndentationExtension';
 import { markdownHighlightExtension, highlightTags } from '../extensions/markdown/highlight/markdownHighlightExtension';
 import { combinedHighlightExtension } from '../extensions/markdown/highlight/combinedHighlightExtension';
 import { horizontalRuleExtension } from '../extensions/markdown/horizontalRule/horizontalRuleExtension';
@@ -55,9 +56,17 @@ const x = 10;
 
 1. Ordered item 1
 2. Ordered item 2
+   1. Nested ordered item 1
+   2. Nested ordered item 2
+      1. Deeply nested item
 
 - List item 1
 - List item 2
+  - Nested list item
+    - Deeply nested item
+    - Another deeply nested item
+  - Back to level 2
+- Back to level 1
 
 > A blockquote
 
@@ -141,6 +150,7 @@ export const markdownExtensions: Extension[] = [
   markdownLinkTransformation,
   markdownSyntaxHiding,
   listBulletExtension,
+  listIndentationExtension, // Use our new list indentation extension
   horizontalRuleExtension,
   combinedHighlightExtension, // Add our new combined highlight extension
 

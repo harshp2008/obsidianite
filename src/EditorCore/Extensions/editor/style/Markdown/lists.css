@@ -1,8 +1,16 @@
 @import "../constant.css";
 
-/* --- List Bullet Specific Styles (Adjusted for consistency with new hiding logic) --- */
+/* --- Basic List Styling --- */
+/* Base styling for all list items */
+.App .cm-editor .cm-list-item {
+  position: relative;
+  box-sizing: border-box;
+  color: var(--editor-text-color) ;
+  margin: 0 ;
+}
 
-/* Styles for the custom bullet '•' when inactive */
+
+/* list bullet styling */
 .App .cm-editor .cm-custom-list-bullet {
   color: var(--cm-list-bullet-color);
   font-weight: var(--cm-list-bullet-font-weight);
@@ -10,21 +18,42 @@
   vertical-align: var(--cm-list-bullet-vertical-align);
 }
 
-/* Styles for the original list mark characters (e.g., '-', '+', '*') when active */
-/* This will also be affected by the .cm-syntax-show class from markdownSyntaxHiding */
-.App .cm-editor .cm-formatting.cm-formatting-list {
-  color: var(--editor-text-color); /* Ensures original bullet text color is white/light */
-  padding: 0;
-  margin: 0;
-  display: inline-block; /* Essential to ensure it takes space when shown */
-  text-align: center;
+/* Original list mark styling when active */
+.App .cm-editor .cm-formatting.cm-formatting-list,
+.App .cm-editor .cm-list-mark-active {
+  color: var(--editor-text-color);
 }
 
-/* Styles for ordered list markers (1., 2., etc.) */
+
+/* Ordered list markers */
+.App .cm-editor .cm-ordered-list-mark,
 .App .cm-editor .cm-ordered-list-mark > span {
-  color: var(--cm-ordered-list-mark-color) !important;
-  font-weight: var(--cm-ordered-list-mark-font-weight);
+  color: var(--cm-list-bullet-color);
+  font-weight: var(--cm-list-bullet-font-weight);
   margin-right: var(--cm-ordered-list-mark-margin-right);
-  vertical-align: var(--cm-ordered-list-mark-vertical-align);
+  vertical-align: var(--cm-ordered-list-mark-vertical-align) ;
 }
 
+
+
+
+/* --- Dynamic Indentation System --- */
+
+/* Dynamic indentation based on list level */
+.App .cm-editor [class*="cm-list-level-"] {
+  position: relative;
+}
+
+/* Generate indentation for any level using CSS custom property */
+.App .cm-editor .cm-list-level-[n] {
+  --list-level: n;
+  padding-left: calc(var(--list-level) * var(--tab-size) * 1ch) !important;
+}
+
+/* Adjust bullet/marker position for indented lists */
+.App .cm-editor .cm-list-level-n .cm-formatting-list,
+.App .cm-editor .cm-list-level-n .cm-custom-list-bullet,
+.App .cm-editor .cm-list-level-n .cm-list-mark-active,
+.App .cm-editor .cm-list-level-n .cm-ordered-list-mark {
+  margin-left: calc(-1 * var(--list-level) * var(--tab-size) * 1ch) !important;
+}

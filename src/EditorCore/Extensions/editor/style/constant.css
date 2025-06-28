@@ -1,17 +1,19 @@
 :root {
-
   --editor-width: 100%;
   --editor-max-width: 600px;
 
-
   /* Editor and Basic Colors */
   --editor-bg: hsl(28, 19%, 15%);
-  --editor-text-color: hsl(34, 38%, 79%); /* Your main editor text color (e.g., from your screenshots) */
+  --editor-text-color: hsl(
+    34,
+    38%,
+    79%
+  ); /* Your main editor text color (e.g., from your screenshots) */
   --cm-inactive-color: hsl(0, 0%, 40%); /* Color for the inactive list bullet */
 
-
-
   --line-spacing: 4px;
+
+ /* Color for active indent guides */
 
   /*  Headings */
   --cm-header-color: hsl(32, 48%, 85%);
@@ -68,22 +70,40 @@
   --cm-selection-text-color: inherit; /* Default selection text color */
   --cm-highlight-selection-bg: hsla(227, 55%, 39%, 0.85); /* Selection in highlight elements */
   --cm-code-selection-bg: hsla(240, 26%, 37%, 0.85); /* Selection in code blocks */
-  --cm-strikethrough-selection-bg: hsla(339, 23%, 25%, 0.85); /* Selection in strikethrough text */
+  --cm-strikethrough-selection-bg: hsla(339, 23%, 25%, 0.85)
 
-  /* Highlight colors variables */
-  --cm-highlight-bg: hsla(60, 100%, 50%, 20%); /* Regular highlight background - olive/gold */
   --cm-highlight-color: --editor-text-color; /* Regular highlight text color */
 
-  --cm-strong-highlight-bg: hsla(0, 84%, 63% , 20%); /* Strong highlight background - maroon/burgundy */
+  --cm-strong-highlight-bg: hsla(0, 84%, 63%, 0.2); /* Strong highlight background - maroon/burgundy */
   --cm-strong-highlight-color: --editor-text-color; /* Strong highlight text color */
 
-  --cm-emphasis-highlight-bg: hsla(188, 64%, 46%, 20%); /* Emphasis highlight background - teal/blue-green */
+  --cm-emphasis-highlight-bg: hsla(188, 64%, 46%, 0.2); /* Emphasis highlight background - teal/blue-green */
   --cm-emphasis-highlight-color: --editor-text-color; /* Emphasis highlight text color */
 
   --cm-strong-emphasis-highlight-bg: hsla(143, 100%, 50%, 0.175); /* Strong+Emphasis highlight - similar to emphasis */
-  --cm-strong-emphasis-highlight-color: hsl(34, 38%, 95%); /* Strong+Emphasis highlight text color */
+  --cm-strong-emphasis-highlight-color: hsl(36, 38%, 95%); /* Strong+Emphasis highlight text color */
+
+  /* Editor Theme Colors */
+  --editor-background-color: hsl(220, 13%, 18%);
+  --editor-cursor-color: hsl(220, 100%, 66%);
+  --editor-selection-color: hsl(221, 13%, 28%);
+  --editor-active-line-color: rgba(153, 187, 255, 0.04);
+
+
+  /* CodeMirror Specific Variables */
+  --cm-selection-background: rgba(153, 187, 255, 0.25);
+  --cm-list-bullet-color: hsla(39, 67%, 69%, 1); /* #e5c07b in HSL */
+  --cm-list-bullet-font-weight: bold;
+  --cm-list-bullet-margin-right: 0.5em;
+  --cm-list-bullet-vertical-align: middle;
+  
+  --cm-ordered-list-mark-color: hsla(39, 67%, 69%, 1); /* #e5c07b in HSL */
+  --cm-ordered-list-mark-font-weight: bold;
+  --cm-ordered-list-mark-margin-right: 0.5em;
+  --cm-ordered-list-mark-vertical-align: middle;
+
+  /* Indentation Settings */
+  --tab-size: 4; /* Tab size in spaces */
+
 }
 
-/*  cm-strong ͼx cm-highlight */
-
-/*  cm-highlight-strong-emphasis */
