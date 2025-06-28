@@ -24,8 +24,6 @@ import { oneDark } from '@codemirror/theme-one-dark';
 // Custom extensions
 import { markdownLinkTransformation } from '../extensions/markdown/webLinks/markdownLinkTransformation';
 import { markdownSyntaxHiding } from '../extensions/markdown/syntaxHiding/snytaxHidingPlugin';
-import { listBulletExtension } from '../extensions/markdown/list/markdownListBulletExtension';
-import { listIndentationExtension } from '../extensions/markdown/list/listIndentationExtension';
 import { markdownHighlightExtension, highlightTags } from '../extensions/markdown/highlight/markdownHighlightExtension';
 import { combinedHighlightExtension } from '../extensions/markdown/highlight/combinedHighlightExtension';
 import { horizontalRuleExtension } from '../extensions/markdown/horizontalRule/horizontalRuleExtension';
@@ -149,8 +147,6 @@ export const markdownExtensions: Extension[] = [
   mySelectionTheme, // Custom selection theme (after base theme to override)
   markdownLinkTransformation,
   markdownSyntaxHiding,
-  listBulletExtension,
-  listIndentationExtension, // Use our new list indentation extension
   horizontalRuleExtension,
   combinedHighlightExtension, // Add our new combined highlight extension
 

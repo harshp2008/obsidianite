@@ -13,8 +13,6 @@
 
   --line-spacing: 4px;
 
- /* Color for active indent guides */
-
   /*  Headings */
   --cm-header-color: hsl(32, 48%, 85%);
   --cm-header-bg: hsla(0, 0, 0, 0);
@@ -101,9 +99,5 @@
   --cm-ordered-list-mark-font-weight: bold;
   --cm-ordered-list-mark-margin-right: 0.5em;
   --cm-ordered-list-mark-vertical-align: middle;
-
-  /* Indentation Settings */
-  --tab-size: 4; /* Tab size in spaces */
-
 }
 

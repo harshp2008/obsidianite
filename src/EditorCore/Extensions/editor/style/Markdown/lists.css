@@ -5,10 +5,9 @@
 .App .cm-editor .cm-list-item {
   position: relative;
   box-sizing: border-box;
-  color: var(--editor-text-color) ;
-  margin: 0 ;
+  color: var(--editor-text-color);
+  margin: 0;
 }
-
 
 /* list bullet styling */
 .App .cm-editor .cm-custom-list-bullet {
@@ -24,36 +23,11 @@
   color: var(--editor-text-color);
 }
 
-
 /* Ordered list markers */
 .App .cm-editor .cm-ordered-list-mark,
 .App .cm-editor .cm-ordered-list-mark > span {
   color: var(--cm-list-bullet-color);
   font-weight: var(--cm-list-bullet-font-weight);
   margin-right: var(--cm-ordered-list-mark-margin-right);
-  vertical-align: var(--cm-ordered-list-mark-vertical-align) ;
-}
-
-
-
-
-/* --- Dynamic Indentation System --- */
-
-/* Dynamic indentation based on list level */
-.App .cm-editor [class*="cm-list-level-"] {
-  position: relative;
-}
-
-/* Generate indentation for any level using CSS custom property */
-.App .cm-editor .cm-list-level-[n] {
-  --list-level: n;
-  padding-left: calc(var(--list-level) * var(--tab-size) * 1ch) !important;
-}
-
-/* Adjust bullet/marker position for indented lists */
-.App .cm-editor .cm-list-level-n .cm-formatting-list,
-.App .cm-editor .cm-list-level-n .cm-custom-list-bullet,
-.App .cm-editor .cm-list-level-n .cm-list-mark-active,
-.App .cm-editor .cm-list-level-n .cm-ordered-list-mark {
-  margin-left: calc(-1 * var(--list-level) * var(--tab-size) * 1ch) !important;
+  vertical-align: var(--cm-ordered-list-mark-vertical-align);
 }

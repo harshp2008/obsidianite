@@ -130,20 +130,6 @@
   font-style: italic;
 }
 
-.App .cm-editor .cm-indent-guides {
-  position: relative;
-}
-
-.App .cm-editor .cm-indent-guides::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background-color: var(--indent-guide-color);
-}
-
 .debug-info {
   width: 100%;
   padding: 5px;
@@ -183,32 +169,4 @@
   background-color: var(--cm-selection-background) !important;
   color: var(--cm-selection-text-color) !important;
   opacity: 0.85 !important;
-}
-
-/* Dynamic list styling - uses CSS variables for list levels */
-.App .cm-editor [class*="cm-list-level-"] {
-  position: relative;
-  --list-indent: calc(var(--list-level, 0) * var(--tab-size) * 1ch);
-  padding-left: var(--list-indent) !important;
-}
-
-/* Ensure list bullets and numbers align properly with dynamic indentation */
-.App .cm-editor [class*="cm-list-level-"] .cm-formatting-list,
-.App .cm-editor [class*="cm-list-level-"] .cm-custom-list-bullet,
-.App .cm-editor [class*="cm-list-level-"] .cm-list-mark-active,
-.App .cm-editor [class*="cm-list-level-"] .cm-ordered-list-mark {
-  margin-left: calc(-1 * var(--list-indent)) !important;
-}
-
-/* Vertical guide for indentation - dynamic based on level */
-.App .cm-editor .cm-line:has([class*="cm-list-level-"])::before {
-  content: "";
-  position: absolute;
-  left: calc((var(--list-level, 0) - 0.5) * var(--tab-size) * 1ch);
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background-color: var(--indent-guide-color);
-  z-index: -1;
-  opacity: 0.5;
 }
