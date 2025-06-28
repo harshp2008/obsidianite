@@ -17,6 +17,19 @@
   vertical-align: var(--cm-list-bullet-vertical-align);
 }
 
+.cm-ordered-list-marker {
+  vertical-align: middle;
+
+}
+
+.cm-ordered-list-marker > span {
+  color: var(--cm-ordered-list-mark-color);
+  font-weight: var(--cm-ordered-list-mark-font-weight);
+  margin-right: var(--cm-ordered-list-mark-margin-right);
+  vertical-align: top;
+ 
+}
+
 /* Hide bullets when cursor is active on line */
 .App .cm-editor .cm-bullet-hidden {
   opacity: 0.5;

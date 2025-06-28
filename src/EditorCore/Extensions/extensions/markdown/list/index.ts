@@ -4,7 +4,6 @@ import { EditorView } from '@codemirror/view';
 import { listBulletExtension } from './listBullet/listBulletExtension';
 import { listIndentationExtension, setIndentSize } from './indentation/listIndentationExtension';
 import { rigidIndentationExtension } from './indentation/rigidIndentationExtension';
-import { lineGuideExtension } from './indentation/lineGuideExtension';
 import { markdownStructuralClassesExtension } from './markdownStructuralClassesExtension';
 
 // Log that our extensions are being loaded
@@ -22,7 +21,7 @@ export const listExtensions: Extension[] = [
   listBulletExtension,
   ...listIndentationExtension,
   ...rigidIndentationExtension,
-  //...lineGuideExtension,
+
   listDebugExtension,
 
   markdownStructuralClassesExtension

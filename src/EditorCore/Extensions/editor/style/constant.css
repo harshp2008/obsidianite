@@ -1,6 +1,12 @@
+
+
 :root {
+  --indent-visual-size: 0ch; /* CONFIRM THIS VALUE MATCHES YOUR ACTUAL INDENT WIDTH */
+  --indent-guide-offset: 0ch; /* Offset for the indent guide lines */
+
   --editor-width: 100%;
   --editor-max-width: 600px;
+
 
   /* Editor and Basic Colors */
   --editor-bg: hsl(28, 19%, 15%);
