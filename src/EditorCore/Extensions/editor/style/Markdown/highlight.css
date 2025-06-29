@@ -5,8 +5,6 @@
 .App .cm-editor span.cm-highlight:not(:has(.cm-highlight, .cm-strong, .cm-emphasis))  {
   background-color: var(--cm-highlight-bg);
   color: var(--cm-highlight-color);
-
-
 }
 
 
