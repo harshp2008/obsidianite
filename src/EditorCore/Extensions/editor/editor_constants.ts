@@ -30,6 +30,7 @@ import { horizontalRuleExtension } from '../extensions/markdown/horizontalRule/h
 import { listExtensions } from '../extensions/markdown/list';
 
 import { markdownBracketCompletion } from './closeBracketsConfig';
+import { toggableDefaultKeymapExtension } from '../extensions/markdown/keymaps/ToggableDefaultKeymap';
 
 //import { indentWithTab } from '@codemirror/commands';
 
@@ -165,4 +166,5 @@ export const markdownExtensions: Extension[] = [
 export const fullExtensions: Extension[] = [
   ...basicExtensions,
   ...markdownExtensions,
+  toggableDefaultKeymapExtension,
 ];

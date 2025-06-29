@@ -20,7 +20,7 @@ const listDebugExtension = EditorView.updateListener.of(update => {
 // Export all list extensions as a single combined extension
 export const listExtensions: Extension[] = [
 
-  toggableDefaultKeymapExtension,
+
 
   listBulletExtension,
   ...listIndentationExtension,

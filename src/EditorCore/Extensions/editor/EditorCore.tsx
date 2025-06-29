@@ -20,8 +20,78 @@ import {
 
 // Import the necessary styles
 import './style/editorCore.css';
-import { disableDefaultKey, getAllDefaultKeyStrings } from '../extensions/markdown/keymaps/ToggableDefaultKeymap';
-import { defaultKeymap } from '@codemirror/commands';
+import { disableDefaultKey, enableDefaultKey, getAllDefaultKeyStrings } from '../extensions/markdown/keymaps/ToggableDefaultKeymap';
+
+
+const disableAllKeymapList = [
+    "Alt-ArrowLeft",
+    "Alt-ArrowRight",
+    "Alt-ArrowUp",
+    "Shift-Alt-ArrowUp",
+    "Alt-ArrowDown",
+    "Shift-Alt-ArrowDown",
+    "Escape",
+    "Mod-Enter",
+    "Alt-l",
+    "Mod-i",
+    "Mod-[",
+    "Mod-]",
+    "Mod-Alt-\\",
+    "Shift-Mod-k",
+    "Shift-Mod-\\",
+    "Mod-/",
+    "Alt-A",
+    "Ctrl-m",
+    "ArrowLeft",
+    "Mod-ArrowLeft",
+    null,
+    "ArrowRight",
+    "Mod-ArrowRight",
+    "ArrowUp",
+    "ArrowDown",
+
+]
+
+const EnabledDefaultKeymap = [
+    "Alt-ArrowLeft",
+    "Alt-ArrowRight",
+    "Alt-ArrowUp",
+    "Shift-Alt-ArrowUp",
+    "Alt-ArrowDown",
+    "Shift-Alt-ArrowDown",
+    "Escape",
+    "Mod-Enter",
+    "Alt-l",
+    "Mod-i",
+    "Mod-[",
+    "Mod-]",
+    "Mod-Alt-\\",
+    "Shift-Mod-k",
+    "Shift-Mod-\\",
+    "Mod-/",
+    "Alt-A",
+    "Ctrl-m",
+    "ArrowLeft",
+    "Mod-ArrowLeft",
+    null,
+    "ArrowRight",
+    "Mod-ArrowRight",
+    //"ArrowUp",
+    //"ArrowDown",
+    "PageUp",
+    "PageDown",
+    "Home",
+    "Mod-Home",
+    "End",
+    "Mod-End",
+    "Enter",
+    "Mod-a",
+    "Backspace",
+    "Delete",
+    "Mod-Backspace",
+    "Mod-Delete"
+]
+
 
 
 interface EditorCoreProps {
@@ -61,15 +131,20 @@ export default function EditorCore({ debugMode = false, initialDoc = initialCont
       // Disable default Tab, Enter, and Shift-Tab to let your custom rigidIndentationKeymap handle them.
       // This is crucial for your list indentation and atomic marker behavior.
       
-      disableDefaultKey (view, "Tab"); //
-      disableDefaultKey(view, "Enter"); //
-      disableDefaultKey(view, "Shift-Tab"); 
+      disableAllKeymapList.forEach((key) => {
+        if (key) {
+          disableDefaultKey(view, key);
+        }
+      });
 
-      disableDefaultKey(view, "ArrowUp"); // Disable Arrow-Up
-      disableDefaultKey(view, "ArrowDown"); // Disable Arrow-Down
-
+      // Enable only the necessary keys for your custom behavior
+      EnabledDefaultKeymap.forEach((key) => {
+        if (key) {
+          enableDefaultKey(view, key);
+        }
+      })
       
-      //console.log("All default key strings:", Array.from(getAllDefaultKeyStrings())); //
+      console.log("All default key strings:", Array.from(getAllDefaultKeyStrings())); //
 
  
 
