@@ -5,6 +5,7 @@ import { listBulletExtension } from './listBullet/listBulletExtension';
 import { listIndentationExtension, setIndentSize } from './indentation/listIndentationExtension';
 import { rigidIndentationExtension } from './indentation/rigidIndentationExtension';
 import { markdownStructuralClassesExtension } from './markdownStructuralClassesExtension';
+import { toggableDefaultKeymapExtension } from '../keymaps/ToggableDefaultKeymap';
 
 // Log that our extensions are being loaded
 console.log("Loading list extensions...");
@@ -18,11 +19,16 @@ const listDebugExtension = EditorView.updateListener.of(update => {
 
 // Export all list extensions as a single combined extension
 export const listExtensions: Extension[] = [
+
+  toggableDefaultKeymapExtension,
+
   listBulletExtension,
   ...listIndentationExtension,
   ...rigidIndentationExtension,
 
   listDebugExtension,
+
+  
 
   markdownStructuralClassesExtension
 ];

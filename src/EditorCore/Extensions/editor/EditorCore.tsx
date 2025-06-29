@@ -1,25 +1,33 @@
 // src/components/EditorCore/EditorCore.tsx
 
-import  { useRef, useEffect } from 'react'; // Corrected React imports
-import { EditorView } from '@codemirror/view'; // Direct import
-import { EditorState, Extension } from '@codemirror/state'; // Direct import
+import { useRef, useEffect } from 'react';
+import { EditorView } from '@codemirror/view';
+import { EditorState, Extension } from '@codemirror/state';
 
-import { logLezerTree } from '../../../utils/lezerInspector'; // Direct import
+import { logLezerTree } from '../../../utils/lezerInspector';
 import { refreshHighlightFormatting } from '../extensions/markdown/highlight/combinedHighlightExtension';
 
 import {
   initialContent,
   fullExtensions,
-} from './editor_constants'; // Import constants and extensions from the new file
+} from './editor_constants';
+
+// Import the toggling functions from the correct path
+// Based on your file structure:
+// From src/components/EditorCore/EditorCore.tsx, you need to go:
+// ../extensions/markdown/list/index.ts to get listExtensions
+// and within list/index.ts, we re-exported disableDefaultKey etc.
 
 // Import the necessary styles
 import './style/editorCore.css';
+import { disableDefaultKey, getAllDefaultKeyStrings } from '../extensions/markdown/keymaps/ToggableDefaultKeymap';
+import { defaultKeymap } from '@codemirror/commands';
 
 
 interface EditorCoreProps {
   debugMode?: boolean;
-  initialDoc?: string; // Allow initial content to be passed as a prop
-  onChange?: (doc: string) => void; // Callback for content changes
+  initialDoc?: string;
+  onChange?: (doc: string) => void;
 }
 
 export default function EditorCore({ debugMode = false, initialDoc = initialContent, onChange }: EditorCoreProps) {
@@ -29,8 +37,7 @@ export default function EditorCore({ debugMode = false, initialDoc = initialCont
   useEffect(() => {
     if (editorRef.current && !viewRef.current) {
       const extensions: Extension[] = [
-        ...fullExtensions, // Use the combined extensions from constants
-        // Add a listener for document changes, if a callback is provided
+        ...fullExtensions,
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             onChange?.(update.state.doc.toString());
@@ -39,7 +46,7 @@ export default function EditorCore({ debugMode = false, initialDoc = initialCont
       ];
 
       const initialState = EditorState.create({
-        doc: initialDoc, // Use initialDoc prop
+        doc: initialDoc,
         extensions: extensions,
       });
 
@@ -49,12 +56,28 @@ export default function EditorCore({ debugMode = false, initialDoc = initialCont
       });
 
       viewRef.current = view;
+
+      // --- Apply the toggling logic here after the view is created ---
+      // Disable default Tab, Enter, and Shift-Tab to let your custom rigidIndentationKeymap handle them.
+      // This is crucial for your list indentation and atomic marker behavior.
       
+      disableDefaultKey (view, "Tab"); //
+      disableDefaultKey(view, "Enter"); //
+      disableDefaultKey(view, "Shift-Tab"); 
+
+      disableDefaultKey(view, "ArrowUp"); // Disable Arrow-Up
+      disableDefaultKey(view, "ArrowDown"); // Disable Arrow-Down
+
+      
+      //console.log("All default key strings:", Array.from(getAllDefaultKeyStrings())); //
+
+ 
+
       // Force refresh of highlight formatting after initial render
       setTimeout(() => {
         if (viewRef.current) {
           refreshHighlightFormatting(viewRef.current);
-          
+
           // Give focus to the editor to ensure styles are applied
           viewRef.current.focus();
         }
@@ -65,7 +88,7 @@ export default function EditorCore({ debugMode = false, initialDoc = initialCont
         viewRef.current = null;
       };
     }
-  }, [initialDoc, onChange]); // Re-run effect if initialDoc or onChange changes
+  }, [initialDoc, onChange]);
 
   // Effect to handle debugMode changes
   useEffect(() => {
@@ -83,15 +106,15 @@ export default function EditorCore({ debugMode = false, initialDoc = initialCont
 
   let debugComponent = (
     <div className="debug-info flex flex-row justify-items-start bg-amber-500 gap-5 items-center p-2">
-    
+
       <span className='h-fit text-black border-2 py-1 px-2 rounded-2xl'>Debug Mode: {debugMode ? 'Enabled' : 'Disabled'}</span>
       <button onClick={handleLogTree} className="log-button">Log Lezer Tree</button>
     </div>
   )
 
   return (
-    <div className="App"> {/* This "App" class might be causing conflict with your main App.css */}
-      { debugMode ? debugComponent : null } 
+    <div className="App">
+      { debugMode ? debugComponent : null }
       <div ref={editorRef} className="editor-container"></div>
     </div>
   );
