@@ -8,7 +8,7 @@ import { syntaxHighlighting, HighlightStyle } from '@codemirror/language'; // Co
 import { tags } from '@lezer/highlight';
 import { javascript } from '@codemirror/lang-javascript';
 import { history, historyKeymap } from '@codemirror/commands';
-import { defaultKeymap } from '@codemirror/commands';
+//import { defaultKeymap } from '@codemirror/commands';
 import { highlightSelectionMatches, searchKeymap } from '@codemirror/search';
 import { lintKeymap } from '@codemirror/lint';
 import {
@@ -31,7 +31,7 @@ import { listExtensions } from '../extensions/markdown/list';
 
 import { markdownBracketCompletion } from './closeBracketsConfig';
 
-import { indentWithTab } from '@codemirror/commands';
+//import { indentWithTab } from '@codemirror/commands';
 
 // Initial content for the editor
 export const initialContent = `## My Markdown Doc
@@ -123,7 +123,7 @@ export const mySelectionTheme = EditorView.theme({
 export const basicExtensions: Extension[] = [
   history(),
   keymap.of(historyKeymap),
-  keymap.of(defaultKeymap),
+  //keymap.of(defaultKeymap),
   highlightSelectionMatches(),
   keymap.of(searchKeymap),
   dropCursor(),
