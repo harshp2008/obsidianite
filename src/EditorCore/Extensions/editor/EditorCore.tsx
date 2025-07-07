@@ -12,86 +12,9 @@ import {
   fullExtensions,
 } from './editor_constants';
 
-// Import the toggling functions from the correct path
-// Based on your file structure:
-// From src/components/EditorCore/EditorCore.tsx, you need to go:
-// ../extensions/markdown/list/index.ts to get listExtensions
-// and within list/index.ts, we re-exported disableDefaultKey etc.
 
 // Import the necessary styles
 import './style/editorCore.css';
-import { disableDefaultKey, enableDefaultKey, getAllDefaultKeyStrings } from '../extensions/markdown/keymaps/ToggableDefaultKeymap';
-
-
-const disableAllKeymapList = [
-    "Alt-ArrowLeft",
-    "Alt-ArrowRight",
-    "Alt-ArrowUp",
-    "Shift-Alt-ArrowUp",
-    "Alt-ArrowDown",
-    "Shift-Alt-ArrowDown",
-    "Escape",
-    "Mod-Enter",
-    "Alt-l",
-    "Mod-i",
-    "Mod-[",
-    "Mod-]",
-    "Mod-Alt-\\",
-    "Shift-Mod-k",
-    "Shift-Mod-\\",
-    "Mod-/",
-    "Alt-A",
-    "Ctrl-m",
-    "ArrowLeft",
-    "Mod-ArrowLeft",
-    null,
-    "ArrowRight",
-    "Mod-ArrowRight",
-    "ArrowUp",
-    "ArrowDown",
-
-]
-
-const EnabledDefaultKeymap = [
-    "Alt-ArrowLeft",
-    "Alt-ArrowRight",
-    "Alt-ArrowUp",
-    "Shift-Alt-ArrowUp",
-    "Alt-ArrowDown",
-    "Shift-Alt-ArrowDown",
-    "Escape",
-    "Mod-Enter",
-    "Alt-l",
-    "Mod-i",
-    "Mod-[",
-    "Mod-]",
-    "Mod-Alt-\\",
-    "Shift-Mod-k",
-    "Shift-Mod-\\",
-    "Mod-/",
-    "Alt-A",
-    "Ctrl-m",
-    "ArrowLeft",
-    "Mod-ArrowLeft",
-    null,
-    "ArrowRight",
-    "Mod-ArrowRight",
-    //"ArrowUp",
-    //"ArrowDown",
-    "PageUp",
-    "PageDown",
-    "Home",
-    "Mod-Home",
-    "End",
-    "Mod-End",
-    "Enter",
-    "Mod-a",
-    "Backspace",
-    "Delete",
-    "Mod-Backspace",
-    "Mod-Delete"
-]
-
 
 
 interface EditorCoreProps {
@@ -126,27 +49,6 @@ export default function EditorCore({ debugMode = false, initialDoc = initialCont
       });
 
       viewRef.current = view;
-
-      // --- Apply the toggling logic here after the view is created ---
-      // Disable default Tab, Enter, and Shift-Tab to let your custom rigidIndentationKeymap handle them.
-      // This is crucial for your list indentation and atomic marker behavior.
-      
-      disableAllKeymapList.forEach((key) => {
-        if (key) {
-          disableDefaultKey(view, key);
-        }
-      });
-
-      // Enable only the necessary keys for your custom behavior
-      EnabledDefaultKeymap.forEach((key) => {
-        if (key) {
-          enableDefaultKey(view, key);
-        }
-      })
-      
-      console.log("All default key strings:", Array.from(getAllDefaultKeyStrings())); //
-
- 
 
       // Force refresh of highlight formatting after initial render
       setTimeout(() => {

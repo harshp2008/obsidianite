@@ -101,7 +101,6 @@
 .App .cm-editor .cm-line {
   padding: 0 4px 0 0;
   line-height: 1.6;
-  margin-bottom: var(--line-spacing);
 }
 
 .App .cm-editor .cm-cursor {
