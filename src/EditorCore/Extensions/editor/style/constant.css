@@ -17,7 +17,7 @@
   ); /* Your main editor text color (e.g., from your screenshots) */
   --cm-inactive-color: hsl(0, 0%, 40%); /* Color for the inactive list bullet */
 
-  /*--line-spacing: 4px;/* Problamatic piece of shit. Don't Use
+  /*--line-spacing: 4px; Problematic piece of shit. Don't Use this for now */
 
   /*  Headings */
   --cm-header-color: hsl(32, 48%, 85%);
