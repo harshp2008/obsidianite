@@ -12,7 +12,6 @@ import {
   fullExtensions,
 } from './editor_constants';
 
-
 // Import the necessary styles
 import './style/editorCore.css';
 
