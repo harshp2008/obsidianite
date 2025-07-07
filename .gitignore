@@ -8,10 +8,10 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+yarn.lock
 dist
 dist-ssr
 *.local
-
 
 # Editor directories and files
 .vscode/*
@@ -23,4 +23,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-yarn.lock
