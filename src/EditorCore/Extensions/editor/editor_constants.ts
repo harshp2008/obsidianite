@@ -9,14 +9,11 @@ import { tags } from '@lezer/highlight';
 import { javascript } from '@codemirror/lang-javascript';
 import { history, historyKeymap } from '@codemirror/commands';
 //import { defaultKeymap } from '@codemirror/commands';
-import { highlightSelectionMatches, searchKeymap } from '@codemirror/search';
-import { lintKeymap } from '@codemirror/lint';
+import { searchKeymap } from '@codemirror/search';
 import {
   dropCursor,
   drawSelection,
   highlightActiveLine,
-  rectangularSelection,
-  crosshairCursor,
   highlightActiveLineGutter,
 } from '@codemirror/view';
 import { oneDark } from '@codemirror/theme-one-dark';
@@ -125,14 +122,10 @@ export const basicExtensions: Extension[] = [
   history(),
   keymap.of(historyKeymap),
   //keymap.of(defaultKeymap),
-  highlightSelectionMatches(),
   keymap.of(searchKeymap),
   dropCursor(),
-  keymap.of(lintKeymap),
   drawSelection(),
   highlightActiveLine(),
-  rectangularSelection(),
-  crosshairCursor(),
   highlightActiveLineGutter(),
   
   // Enable line wrapping

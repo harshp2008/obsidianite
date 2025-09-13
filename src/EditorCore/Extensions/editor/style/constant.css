@@ -1,9 +1,8 @@
 
 
-:root {
-  --indent-visual-size: 0ch; /* CONFIRM THIS VALUE MATCHES YOUR ACTUAL INDENT WIDTH */
-  --indent-guide-offset: 0ch; /* Offset for the indent guide lines */
 
+
+:root {
   --editor-width: 100%;
   --editor-max-width: 600px;
 
@@ -74,10 +73,10 @@
   --cm-selection-text-color: inherit; /* Default selection text color */
   --cm-highlight-selection-bg: hsla(227, 55%, 39%, 0.85); /* Selection in highlight elements */
   --cm-code-selection-bg: hsla(240, 26%, 37%, 0.85); /* Selection in code blocks */
-  --cm-strikethrough-selection-bg: hsla(339, 23%, 25%, 0.85)
+  --cm-strikethrough-selection-bg: hsla(339, 23%, 25%, 0.85);
 
   --cm-highlight-color: --editor-text-color; /* Regular highlight text color */
-  --cm-highlight-bg: hsla(60, 100%, 50%, 0.2); /* Regular highlight background - maroon/burgundy */
+  --cm-highlight-bg:  hsla(60, 100%, 50%, 0.2); /* Regular highlight background - maroon/burgundy */
 
   --cm-strong-highlight-bg: hsla(0, 84%, 63%, 0.2); /* Strong highlight background - maroon/burgundy */
   --cm-strong-highlight-color: --editor-text-color; /* Strong highlight text color */
@@ -107,4 +106,5 @@
   --cm-ordered-list-mark-margin-right: 0.5em;
   --cm-ordered-list-mark-vertical-align: middle;
 }
+
 

@@ -1,5 +1,5 @@
 import { EditorView } from '@codemirror/view';
-import { RangeSetBuilder, StateField, Extension } from '@codemirror/state';
+import { RangeSetBuilder, StateField } from '@codemirror/state';
 import { Decoration, DecorationSet } from '@codemirror/view';
 import { syntaxTree } from '@codemirror/language';
 import { SyntaxNode } from '@lezer/common';

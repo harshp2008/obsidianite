@@ -2,7 +2,6 @@
 import { EditorView, Decoration, WidgetType, type DecorationSet } from '@codemirror/view';
 import { StateField, type EditorState, Range } from '@codemirror/state';
 import { syntaxTree } from '@codemirror/language';
-import { SyntaxNode } from '@lezer/common'; // Explicitly import SyntaxNode
 
 // Define a custom WidgetType for the horizontal line visual
 class HorizontalRuleWidget extends WidgetType {
