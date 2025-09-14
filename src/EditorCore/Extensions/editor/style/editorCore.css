@@ -85,7 +85,6 @@
   background-color: var(--editor-bg);
   color: var(--editor-text-color);
   font-family: inherit;
-  line-height: 1.6;
   border-radius: 4px;
 }
 
@@ -101,6 +100,7 @@
 .App .cm-editor .cm-line {
   padding: 0 4px 0 0;
   line-height: var(--line-height);
+  font-size: var(--master-font-size);
 }
 
 .App .cm-editor .cm-cursor {

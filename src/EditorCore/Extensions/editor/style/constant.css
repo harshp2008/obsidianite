@@ -4,7 +4,9 @@
 
 :root {
   --editor-width: 100%;
-  --editor-max-width: 600px;
+  --editor-max-width: 650px;
+
+  --master-font-size: 18px; /* Base font size for the editor */
   --line-height: 2.0; /* Adjust this value to change line height */
 
   /* Editor and Basic Colors */
