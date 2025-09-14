@@ -100,7 +100,7 @@
 
 .App .cm-editor .cm-line {
   padding: 0 4px 0 0;
-  line-height: 1.6;
+  line-height: var(--line-height);
 }
 
 .App .cm-editor .cm-cursor {

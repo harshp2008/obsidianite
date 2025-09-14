@@ -5,7 +5,7 @@
 :root {
   --editor-width: 100%;
   --editor-max-width: 600px;
-
+  --line-height: 2.0; /* Adjust this value to change line height */
 
   /* Editor and Basic Colors */
   --editor-bg: hsl(28, 19%, 15%);
